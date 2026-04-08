@@ -1,4 +1,5 @@
-const { prisma } = require('../config/db');
+const { pool } = require('../config/db');
+const crypto = require('crypto');
 
 // @desc    Create a new post
 // @route   POST /api/posts
@@ -12,47 +13,47 @@ const createPost = async (req, res, next) => {
       throw new Error('Post text is required');
     }
 
+    const postId = crypto.randomUUID();
+
+    // Insert Post
+    await pool.execute(
+      'INSERT INTO Posts (id, userId, text, imageUrl) VALUES (?, ?, ?, ?)',
+      [postId, req.user.id, text, imageUrl || null]
+    );
+
     // Extract hashtags from text (words starting with #)
     const hashtagsArray = text.match(/#[a-z0-9_]+/gi) || [];
     const uniqueHashtags = [...new Set(hashtagsArray.map((tag) => tag.toLowerCase().replace('#', '')))];
 
-    const tagsToConnect = [];
-    
-    // Update Hashtag collection counts and prepare connections
+    // Insert Hashtags and PostHashtags
     for (const tag of uniqueHashtags) {
-      const existing = await prisma.hashtag.findUnique({ where: { name: tag } });
-      if (existing) {
-        const updated = await prisma.hashtag.update({
-          where: { id: existing.id },
-          data: { count: existing.count + 1 }
-        });
-        tagsToConnect.push({ id: updated.id });
-      } else {
-        const created = await prisma.hashtag.create({
-          data: { name: tag, count: 1 }
-        });
-        tagsToConnect.push({ id: created.id });
-      }
+      const tagId = crypto.randomUUID();
+      // Insert or update count if duplicate key (we need to make sure 'name' is unique in schema)
+      await pool.execute(
+        \`INSERT INTO Hashtags (id, name, count) VALUES (?, ?, 1)
+         ON DUPLICATE KEY UPDATE count = count + 1\`,
+        [tagId, tag]
+      );
+
+      // Get the tag id (whether just created or existing)
+      const [rows] = await pool.execute('SELECT id FROM Hashtags WHERE name = ?', [tag]);
+      const actualTagId = rows[0].id;
+
+      await pool.execute(
+        'INSERT INTO PostHashtags (postId, hashtagId) VALUES (?, ?)',
+        [postId, actualTagId]
+      );
     }
 
-    const post = await prisma.post.create({
-      data: {
-        userId: req.user.id,
-        text,
-        imageUrl: imageUrl || null,
-        hashtags: {
-          connect: tagsToConnect
-        }
-      },
-      include: {
-        user: {
-          select: { username: true, bio: true }
-        },
-        hashtags: true
-      }
-    });
+    const [createdPost] = await pool.execute(
+      \`SELECT p.*, u.username, u.bio 
+       FROM Posts p 
+       JOIN Users u ON p.userId = u.id 
+       WHERE p.id = ?\`,
+      [postId]
+    );
 
-    res.status(201).json(post);
+    res.status(201).json(createdPost[0]);
   } catch (error) {
     next(error);
   }
@@ -63,42 +64,64 @@ const createPost = async (req, res, next) => {
 // @access  Private
 const deletePost = async (req, res, next) => {
   try {
-    const post = await prisma.post.findUnique({
-      where: { id: req.params.id },
-      include: { hashtags: true }
-    });
+    const postId = req.params.id;
 
-    if (!post) {
+    const [posts] = await pool.execute(
+      'SELECT userId FROM Posts WHERE id = ?',
+      [postId]
+    );
+
+    if (posts.length === 0) {
       res.status(404);
       throw new Error('Post not found');
     }
 
-    // Check user owns the post
-    if (post.userId !== req.user.id) {
+    if (posts[0].userId !== req.user.id) {
       res.status(401);
       throw new Error('User not authorized to delete this post');
     }
 
-    // Decrease hashtag counts
-    for (const hashtag of post.hashtags) {
-      const tag = await prisma.hashtag.findUnique({ where: { id: hashtag.id } });
-      if (tag) {
-        if (tag.count <= 1) {
-          await prisma.hashtag.delete({ where: { id: tag.id } });
-        } else {
-          await prisma.hashtag.update({
-            where: { id: tag.id },
-            data: { count: tag.count - 1 }
-          });
-        }
+    // Handle Hashtag counts reduction BEFORE deleting the post
+    const [hashtags] = await pool.execute(
+      \`SELECT h.id, h.count FROM Hashtags h
+       JOIN PostHashtags ph ON h.id = ph.hashtagId
+       WHERE ph.postId = ?\`,
+      [postId]
+    );
+
+    for (const tag of hashtags) {
+      if (tag.count <= 1) {
+        await pool.execute('DELETE FROM Hashtags WHERE id = ?', [tag.id]);
+      } else {
+        await pool.execute('UPDATE Hashtags SET count = count - 1 WHERE id = ?', [tag.id]);
       }
     }
 
-    await prisma.post.delete({ where: { id: post.id } });
+    // CASCADE delete will remove rows in PostHashtags, Comments, Likes automatically
+    await pool.execute('DELETE FROM Posts WHERE id = ?', [postId]);
+
     res.json({ message: 'Post removed' });
   } catch (error) {
     next(error);
   }
+};
+
+// Helper function to append likes and hashtags to retrieved posts lists
+const appendPostDetails = async (posts) => {
+  const finalPosts = [];
+  for (const post of posts) {
+    const [likes] = await pool.execute('SELECT userId as id FROM Likes WHERE postId = ?', [post.id]);
+    const [hashtags] = await pool.execute(
+      \`SELECT h.name FROM Hashtags h
+       JOIN PostHashtags ph ON h.id = ph.hashtagId
+       WHERE ph.postId = ?\`,
+      [post.id]
+    );
+    post.likes = likes;
+    post.hashtags = hashtags.map(h => h.name);
+    finalPosts.push(post);
+  }
+  return finalPosts;
 };
 
 // @desc    Get all posts (global feed)
@@ -108,20 +131,23 @@ const getPosts = async (req, res, next) => {
   try {
     const pageSize = 10;
     const page = Number(req.query.pageNumber) || 1;
+    const offset = pageSize * (page - 1);
 
-    const count = await prisma.post.count();
-    const posts = await prisma.post.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: pageSize,
-      skip: pageSize * (page - 1),
-      include: {
-        user: { select: { id: true, username: true } },
-        likes: { select: { id: true } },
-        hashtags: true
-      }
-    });
+    const [countRows] = await pool.execute('SELECT COUNT(*) as total FROM Posts');
+    const totalCount = countRows[0].total;
 
-    res.json({ posts, page, pages: Math.ceil(count / pageSize) });
+    const [posts] = await pool.execute(
+      \`SELECT p.*, u.username 
+       FROM Posts p 
+       JOIN Users u ON p.userId = u.id 
+       ORDER BY p.createdAt DESC
+       LIMIT ? OFFSET ?\`,
+      [String(pageSize), String(offset)] // passing as strings to avoid mysql2 implicit typing issues with LIMIT dynamically
+    );
+
+    const detailedPosts = await appendPostDetails(posts);
+
+    res.json({ posts: detailedPosts, page, pages: Math.ceil(totalCount / pageSize) });
   } catch (error) {
     next(error);
   }
@@ -132,17 +158,17 @@ const getPosts = async (req, res, next) => {
 // @access  Public
 const getUserPosts = async (req, res, next) => {
   try {
-    const posts = await prisma.post.findMany({
-      where: { userId: req.params.userId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { select: { id: true, username: true } },
-        likes: { select: { id: true } },
-        hashtags: true
-      }
-    });
+    const [posts] = await pool.execute(
+      \`SELECT p.*, u.username 
+       FROM Posts p 
+       JOIN Users u ON p.userId = u.id 
+       WHERE p.userId = ?
+       ORDER BY p.createdAt DESC\`,
+      [req.params.userId]
+    );
 
-    res.json(posts);
+    const detailedPosts = await appendPostDetails(posts);
+    res.json(detailedPosts);
   } catch (error) {
     next(error);
   }
@@ -156,40 +182,34 @@ const toggleLikePost = async (req, res, next) => {
     const postId = req.params.id;
     const currentUserId = req.user.id;
 
-    const post = await prisma.post.findUnique({
-      where: { id: postId },
-      include: { likes: { select: { id: true } } }
-    });
-
-    if (!post) {
+    const [posts] = await pool.execute('SELECT id FROM Posts WHERE id = ?', [postId]);
+    if (posts.length === 0) {
       res.status(404);
       throw new Error('Post not found');
     }
 
-    const isLiked = post.likes.some(u => u.id === currentUserId);
+    const [likes] = await pool.execute(
+      'SELECT * FROM Likes WHERE userId = ? AND postId = ?',
+      [currentUserId, postId]
+    );
 
-    let updatedPost;
+    const isLiked = likes.length > 0;
+
     if (isLiked) {
-      // Unlike
-      updatedPost = await prisma.post.update({
-        where: { id: postId },
-        data: {
-          likes: { disconnect: { id: currentUserId } }
-        },
-        include: { likes: { select: { id: true } } }
-      });
+      await pool.execute(
+        'DELETE FROM Likes WHERE userId = ? AND postId = ?',
+        [currentUserId, postId]
+      );
     } else {
-      // Like
-      updatedPost = await prisma.post.update({
-        where: { id: postId },
-        data: {
-          likes: { connect: { id: currentUserId } }
-        },
-        include: { likes: { select: { id: true } } }
-      });
+      await pool.execute(
+        'INSERT INTO Likes (userId, postId) VALUES (?, ?)',
+        [currentUserId, postId]
+      );
     }
 
-    res.json({ message: isLiked ? 'Post unliked' : 'Post liked', likesCount: updatedPost.likes.length });
+    const [totalLikes] = await pool.execute('SELECT COUNT(*) as count FROM Likes WHERE postId = ?', [postId]);
+
+    res.json({ message: isLiked ? 'Post unliked' : 'Post liked', likesCount: totalLikes[0].count });
   } catch (error) {
     next(error);
   }

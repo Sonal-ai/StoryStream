@@ -1,6 +1,7 @@
-const { prisma } = require('../config/db');
+const { pool } = require('../config/db');
 const generateToken = require('../utils/generateToken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -9,42 +10,33 @@ const registerUser = async (req, res, next) => {
   try {
     const { username, email, password, bio } = req.body;
 
-    const userExists = await prisma.user.findFirst({
-      where: {
-        OR: [{ email }, { username }],
-      },
-    });
+    const [existingUsers] = await pool.execute(
+      'SELECT * FROM Users WHERE email = ? OR username = ?',
+      [email, username]
+    );
 
-    if (userExists) {
+    if (existingUsers.length > 0) {
       res.status(400);
       throw new Error('User already exists with this email or username');
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const userId = crypto.randomUUID();
 
-    const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        password: hashedPassword,
-        bio: bio || null,
-      },
+    await pool.execute(
+      'INSERT INTO Users (id, username, email, password, bio) VALUES (?, ?, ?, ?, ?)',
+      [userId, username, email, hashedPassword, bio || null]
+    );
+
+    res.status(201).json({
+      _id: userId,
+      id: userId,
+      username,
+      email,
+      bio,
+      token: generateToken(userId),
     });
-
-    if (user) {
-      res.status(201).json({
-        _id: user.id, // Keeping _id for backwards compatibility
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        bio: user.bio,
-        token: generateToken(user.id),
-      });
-    } else {
-      res.status(400);
-      throw new Error('Invalid user data');
-    }
   } catch (error) {
     next(error);
   }
@@ -57,9 +49,12 @@ const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const [users] = await pool.execute(
+      'SELECT * FROM Users WHERE email = ?',
+      [email]
+    );
+
+    const user = users[0];
 
     if (user && (await bcrypt.compare(password, user.password))) {
       res.json({

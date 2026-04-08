@@ -1,4 +1,4 @@
-const { prisma } = require('../config/db');
+const { pool } = require('../config/db');
 const bcrypt = require('bcryptjs');
 
 // @desc    Get user profile
@@ -6,21 +6,37 @@ const bcrypt = require('bcryptjs');
 // @access  Public
 const getUserProfile = async (req, res, next) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.params.id },
-      include: {
-        followers: { select: { id: true, username: true } },
-        following: { select: { id: true, username: true } },
-      },
-    });
+    const userId = req.params.id;
+    const [users] = await pool.execute(
+      'SELECT id, username, email, bio FROM Users WHERE id = ?',
+      [userId]
+    );
 
-    if (user) {
-      delete user.password;
-      res.json(user);
-    } else {
+    if (users.length === 0) {
       res.status(404);
       throw new Error('User not found');
     }
+
+    const user = users[0];
+
+    const [followers] = await pool.execute(
+      \`SELECT u.id, u.username FROM Users u 
+       JOIN Follows f ON u.id = f.followerId 
+       WHERE f.followingId = ?\`,
+      [userId]
+    );
+
+    const [following] = await pool.execute(
+      \`SELECT u.id, u.username FROM Users u 
+       JOIN Follows f ON u.id = f.followingId 
+       WHERE f.followerId = ?\`,
+      [userId]
+    );
+
+    user.followers = followers;
+    user.following = following;
+
+    res.json(user);
   } catch (error) {
     next(error);
   }
@@ -31,37 +47,39 @@ const getUserProfile = async (req, res, next) => {
 // @access  Private
 const updateUserProfile = async (req, res, next) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id }
-    });
+    const userId = req.user.id;
+    const [users] = await pool.execute(
+      'SELECT * FROM Users WHERE id = ?',
+      [userId]
+    );
 
-    if (user) {
-      const dataToUpdate = {
-        username: req.body.username || user.username,
-        bio: req.body.bio !== undefined ? req.body.bio : user.bio
-      };
-
-      if (req.body.password) {
-        const salt = await bcrypt.genSalt(10);
-        dataToUpdate.password = await bcrypt.hash(req.body.password, salt);
-      }
-
-      const updatedUser = await prisma.user.update({
-        where: { id: req.user.id },
-        data: dataToUpdate
-      });
-
-      res.json({
-        id: updatedUser.id,
-        _id: updatedUser.id, // For backwards compatibility
-        username: updatedUser.username,
-        email: updatedUser.email,
-        bio: updatedUser.bio,
-      });
-    } else {
+    if (users.length === 0) {
       res.status(404);
       throw new Error('User not found');
     }
+
+    const user = users[0];
+    const username = req.body.username || user.username;
+    const bio = req.body.bio !== undefined ? req.body.bio : user.bio;
+    let password = user.password;
+
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      password = await bcrypt.hash(req.body.password, salt);
+    }
+
+    await pool.execute(
+      'UPDATE Users SET username = ?, bio = ?, password = ? WHERE id = ?',
+      [username, bio, password, userId]
+    );
+
+    res.json({
+      id: userId,
+      _id: userId,
+      username,
+      email: user.email,
+      bio,
+    });
   } catch (error) {
     next(error);
   }
@@ -80,40 +98,36 @@ const toggleFollowUser = async (req, res, next) => {
       throw new Error('You cannot follow yourself');
     }
 
-    const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
-    if (!targetUser) {
+    const [targetUsers] = await pool.execute(
+      'SELECT id FROM Users WHERE id = ?',
+      [targetUserId]
+    );
+
+    if (targetUsers.length === 0) {
       res.status(404);
       throw new Error('User not found');
     }
 
     // Check if currently following
-    const currentUser = await prisma.user.findUnique({
-      where: { id: currentUserId },
-      include: { following: { select: { id: true } } }
-    });
+    const [follows] = await pool.execute(
+      'SELECT * FROM Follows WHERE followerId = ? AND followingId = ?',
+      [currentUserId, targetUserId]
+    );
 
-    const isFollowing = currentUser.following.some(f => f.id === targetUserId);
+    const isFollowing = follows.length > 0;
 
     if (isFollowing) {
       // Unfollow
-      await prisma.user.update({
-        where: { id: currentUserId },
-        data: {
-          following: {
-            disconnect: { id: targetUserId }
-          }
-        }
-      });
+      await pool.execute(
+        'DELETE FROM Follows WHERE followerId = ? AND followingId = ?',
+        [currentUserId, targetUserId]
+      );
     } else {
       // Follow
-      await prisma.user.update({
-        where: { id: currentUserId },
-        data: {
-          following: {
-            connect: { id: targetUserId }
-          }
-        }
-      });
+      await pool.execute(
+        'INSERT INTO Follows (followerId, followingId) VALUES (?, ?)',
+        [currentUserId, targetUserId]
+      );
     }
 
     res.json({ message: isFollowing ? 'User unfollowed' : 'User followed' });

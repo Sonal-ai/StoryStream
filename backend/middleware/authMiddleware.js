@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { prisma } = require('../config/db');
+const { pool } = require('../config/db');
 
 const protect = async (req, res, next) => {
   let token;
@@ -15,14 +15,16 @@ const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Get user from the token
-      req.user = await prisma.user.findUnique({
-        where: { id: decoded.id }
-      });
+      // Get user from the token without the password
+      const [users] = await pool.execute(
+        'SELECT id, username, email, bio FROM Users WHERE id = ?',
+        [decoded.id]
+      );
+
+      req.user = users[0];
       
       if (req.user) {
-        delete req.user.password;
-        // Keep _id for backward compatibility with older controllers pending refactor
+        // Keep _id for backward compatibility
         req.user._id = req.user.id;
       }
 

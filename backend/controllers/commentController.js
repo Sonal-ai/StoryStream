@@ -1,4 +1,5 @@
-const { prisma } = require('../config/db');
+const { pool } = require('../config/db');
+const crypto = require('crypto');
 
 // @desc    Add comment to post
 // @route   POST /api/comments/:postId
@@ -13,25 +14,29 @@ const addComment = async (req, res, next) => {
       throw new Error('Comment text is required');
     }
 
-    const post = await prisma.post.findUnique({ where: { id: postId } });
+    const [posts] = await pool.execute('SELECT id FROM Posts WHERE id = ?', [postId]);
 
-    if (!post) {
+    if (posts.length === 0) {
       res.status(404);
       throw new Error('Post not found');
     }
 
-    const comment = await prisma.comment.create({
-      data: {
-        userId: req.user.id,
-        postId: postId,
-        text,
-      },
-      include: {
-        user: { select: { id: true, username: true } }
-      }
-    });
+    const commentId = crypto.randomUUID();
 
-    res.status(201).json(comment);
+    await pool.execute(
+      'INSERT INTO Comments (id, userId, postId, text) VALUES (?, ?, ?, ?)',
+      [commentId, req.user.id, postId, text]
+    );
+
+    const [comments] = await pool.execute(
+      `SELECT c.*, u.username 
+       FROM Comments c 
+       JOIN Users u ON c.userId = u.id 
+       WHERE c.id = ?`,
+      [commentId]
+    );
+
+    res.status(201).json(comments[0]);
   } catch (error) {
     next(error);
   }
@@ -42,28 +47,33 @@ const addComment = async (req, res, next) => {
 // @access  Private
 const deleteComment = async (req, res, next) => {
   try {
-    const comment = await prisma.comment.findUnique({
-      where: { id: req.params.id },
-      include: {
-        post: { select: { userId: true } }
-      }
-    });
+    const commentId = req.params.id;
 
-    if (!comment) {
+    const [comments] = await pool.execute(
+      `SELECT c.userId as commentUserId, p.userId as postUserId 
+       FROM Comments c 
+       JOIN Posts p ON c.postId = p.id 
+       WHERE c.id = ?`,
+      [commentId]
+    );
+
+    if (comments.length === 0) {
       res.status(404);
       throw new Error('Comment not found');
     }
 
+    const comment = comments[0];
+
     // Check if the user owns the comment OR owns the post the comment is on
     if (
-      comment.userId !== req.user.id &&
-      comment.post.userId !== req.user.id
+      comment.commentUserId !== req.user.id &&
+      comment.postUserId !== req.user.id
     ) {
       res.status(401);
       throw new Error('User not authorized to delete this comment');
     }
 
-    await prisma.comment.delete({ where: { id: comment.id } });
+    await pool.execute('DELETE FROM Comments WHERE id = ?', [commentId]);
     res.json({ message: 'Comment removed' });
   } catch (error) {
     next(error);
@@ -75,13 +85,14 @@ const deleteComment = async (req, res, next) => {
 // @access  Public
 const getComments = async (req, res, next) => {
   try {
-    const comments = await prisma.comment.findMany({
-      where: { postId: req.params.postId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { select: { id: true, username: true } }
-      }
-    });
+    const [comments] = await pool.execute(
+      `SELECT c.*, u.username 
+       FROM Comments c 
+       JOIN Users u ON c.userId = u.id 
+       WHERE c.postId = ? 
+       ORDER BY c.createdAt DESC`,
+      [req.params.postId]
+    );
 
     res.json(comments);
   } catch (error) {
