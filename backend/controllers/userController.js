@@ -1,16 +1,21 @@
-const User = require('../models/User');
+const { prisma } = require('../config/db');
+const bcrypt = require('bcryptjs');
 
 // @desc    Get user profile
 // @route   GET /api/users/:id
 // @access  Public
 const getUserProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id)
-      .select('-password')
-      .populate('followers', 'username')
-      .populate('following', 'username');
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      include: {
+        followers: { select: { id: true, username: true } },
+        following: { select: { id: true, username: true } },
+      },
+    });
 
     if (user) {
+      delete user.password;
       res.json(user);
     } else {
       res.status(404);
@@ -26,20 +31,29 @@ const getUserProfile = async (req, res, next) => {
 // @access  Private
 const updateUserProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id }
+    });
 
     if (user) {
-      user.username = req.body.username || user.username;
-      user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
+      const dataToUpdate = {
+        username: req.body.username || user.username,
+        bio: req.body.bio !== undefined ? req.body.bio : user.bio
+      };
 
       if (req.body.password) {
-        user.password = req.body.password;
+        const salt = await bcrypt.genSalt(10);
+        dataToUpdate.password = await bcrypt.hash(req.body.password, salt);
       }
 
-      const updatedUser = await user.save();
+      const updatedUser = await prisma.user.update({
+        where: { id: req.user.id },
+        data: dataToUpdate
+      });
 
       res.json({
-        _id: updatedUser._id,
+        id: updatedUser.id,
+        _id: updatedUser.id, // For backwards compatibility
         username: updatedUser.username,
         email: updatedUser.email,
         bio: updatedUser.bio,
@@ -59,35 +73,48 @@ const updateUserProfile = async (req, res, next) => {
 const toggleFollowUser = async (req, res, next) => {
   try {
     const targetUserId = req.params.id;
-    const currentUserId = req.user._id;
+    const currentUserId = req.user.id;
 
-    if (targetUserId === currentUserId.toString()) {
+    if (targetUserId === currentUserId) {
       res.status(400);
       throw new Error('You cannot follow yourself');
     }
 
-    const targetUser = await User.findById(targetUserId);
-    const currentUser = await User.findById(currentUserId);
-
-    if (!targetUser || !currentUser) {
+    const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!targetUser) {
       res.status(404);
       throw new Error('User not found');
     }
 
-    const isFollowing = currentUser.following.includes(targetUserId);
+    // Check if currently following
+    const currentUser = await prisma.user.findUnique({
+      where: { id: currentUserId },
+      include: { following: { select: { id: true } } }
+    });
+
+    const isFollowing = currentUser.following.some(f => f.id === targetUserId);
 
     if (isFollowing) {
       // Unfollow
-      currentUser.following.pull(targetUserId);
-      targetUser.followers.pull(currentUserId);
+      await prisma.user.update({
+        where: { id: currentUserId },
+        data: {
+          following: {
+            disconnect: { id: targetUserId }
+          }
+        }
+      });
     } else {
       // Follow
-      currentUser.following.push(targetUserId);
-      targetUser.followers.push(currentUserId);
+      await prisma.user.update({
+        where: { id: currentUserId },
+        data: {
+          following: {
+            connect: { id: targetUserId }
+          }
+        }
+      });
     }
-
-    await currentUser.save();
-    await targetUser.save();
 
     res.json({ message: isFollowing ? 'User unfollowed' : 'User followed' });
   } catch (error) {

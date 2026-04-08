@@ -1,5 +1,4 @@
-const Comment = require('../models/Comment');
-const Post = require('../models/Post');
+const { prisma } = require('../config/db');
 
 // @desc    Add comment to post
 // @route   POST /api/comments/:postId
@@ -14,21 +13,25 @@ const addComment = async (req, res, next) => {
       throw new Error('Comment text is required');
     }
 
-    const post = await Post.findById(postId);
+    const post = await prisma.post.findUnique({ where: { id: postId } });
 
     if (!post) {
       res.status(404);
       throw new Error('Post not found');
     }
 
-    const comment = await Comment.create({
-      user: req.user._id,
-      post: postId,
-      text,
+    const comment = await prisma.comment.create({
+      data: {
+        userId: req.user.id,
+        postId: postId,
+        text,
+      },
+      include: {
+        user: { select: { id: true, username: true } }
+      }
     });
 
-    const createdComment = await Comment.findById(comment._id).populate('user', 'username');
-    res.status(201).json(createdComment);
+    res.status(201).json(comment);
   } catch (error) {
     next(error);
   }
@@ -39,7 +42,12 @@ const addComment = async (req, res, next) => {
 // @access  Private
 const deleteComment = async (req, res, next) => {
   try {
-    const comment = await Comment.findById(req.params.id);
+    const comment = await prisma.comment.findUnique({
+      where: { id: req.params.id },
+      include: {
+        post: { select: { userId: true } }
+      }
+    });
 
     if (!comment) {
       res.status(404);
@@ -47,22 +55,15 @@ const deleteComment = async (req, res, next) => {
     }
 
     // Check if the user owns the comment OR owns the post the comment is on
-    const post = await Post.findById(comment.post);
-    
-    if (!post) {
-       res.status(404);
-       throw new Error('Associated post not found');
-    }
-
     if (
-      comment.user.toString() !== req.user._id.toString() &&
-      post.user.toString() !== req.user._id.toString()
+      comment.userId !== req.user.id &&
+      comment.post.userId !== req.user.id
     ) {
       res.status(401);
       throw new Error('User not authorized to delete this comment');
     }
 
-    await Comment.deleteOne({ _id: comment._id });
+    await prisma.comment.delete({ where: { id: comment.id } });
     res.json({ message: 'Comment removed' });
   } catch (error) {
     next(error);
@@ -74,9 +75,13 @@ const deleteComment = async (req, res, next) => {
 // @access  Public
 const getComments = async (req, res, next) => {
   try {
-    const comments = await Comment.find({ post: req.params.postId })
-      .populate('user', 'username')
-      .sort({ createdAt: -1 });
+    const comments = await prisma.comment.findMany({
+      where: { postId: req.params.postId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { id: true, username: true } }
+      }
+    });
 
     res.json(comments);
   } catch (error) {

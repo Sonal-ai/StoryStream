@@ -1,5 +1,4 @@
-const Post = require('../models/Post');
-const Hashtag = require('../models/Hashtag');
+const { prisma } = require('../config/db');
 
 // @desc    Get posts by hashtag
 // @route   GET /api/hashtags/:tag
@@ -8,11 +7,25 @@ const getPostsByHashtag = async (req, res, next) => {
   try {
     const tag = req.params.tag.toLowerCase();
 
-    const posts = await Post.find({ hashtags: tag })
-      .populate('user', 'username')
-      .sort({ createdAt: -1 });
+    const hashtagWithPosts = await prisma.hashtag.findUnique({
+      where: { name: tag },
+      include: {
+        posts: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: { select: { id: true, username: true } },
+            likes: { select: { id: true } },
+            hashtags: true
+          }
+        }
+      }
+    });
 
-    res.json(posts);
+    if (!hashtagWithPosts) {
+      return res.json([]);
+    }
+
+    res.json(hashtagWithPosts.posts);
   } catch (error) {
     next(error);
   }
@@ -23,7 +36,10 @@ const getPostsByHashtag = async (req, res, next) => {
 // @access  Public
 const getTrendingHashtags = async (req, res, next) => {
   try {
-    const trending = await Hashtag.find({}).sort({ count: -1 }).limit(10);
+    const trending = await prisma.hashtag.findMany({
+      orderBy: { count: 'desc' },
+      take: 10
+    });
     res.json(trending);
   } catch (error) {
     next(error);
