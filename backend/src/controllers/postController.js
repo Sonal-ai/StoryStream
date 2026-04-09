@@ -30,8 +30,8 @@ const createPost = async (req, res, next) => {
       const tagId = crypto.randomUUID();
       // Insert or update count if duplicate key (we need to make sure 'name' is unique in schema)
       await pool.execute(
-        \`INSERT INTO Hashtags (id, name, count) VALUES (?, ?, 1)
-         ON DUPLICATE KEY UPDATE count = count + 1\`,
+        `INSERT INTO Hashtags (id, name, count) VALUES (?, ?, 1)
+         ON DUPLICATE KEY UPDATE count = count + 1`,
         [tagId, tag]
       );
 
@@ -46,10 +46,10 @@ const createPost = async (req, res, next) => {
     }
 
     const [createdPost] = await pool.execute(
-      \`SELECT p.*, u.username, u.bio 
+      `SELECT p.*, u.username, u.bio 
        FROM Posts p 
        JOIN Users u ON p.userId = u.id 
-       WHERE p.id = ?\`,
+       WHERE p.id = ?`,
       [postId]
     );
 
@@ -83,9 +83,9 @@ const deletePost = async (req, res, next) => {
 
     // Handle Hashtag counts reduction BEFORE deleting the post
     const [hashtags] = await pool.execute(
-      \`SELECT h.id, h.count FROM Hashtags h
+      `SELECT h.id, h.count FROM Hashtags h
        JOIN PostHashtags ph ON h.id = ph.hashtagId
-       WHERE ph.postId = ?\`,
+       WHERE ph.postId = ?`,
       [postId]
     );
 
@@ -112,9 +112,9 @@ const appendPostDetails = async (posts) => {
   for (const post of posts) {
     const [likes] = await pool.execute('SELECT userId as id FROM Likes WHERE postId = ?', [post.id]);
     const [hashtags] = await pool.execute(
-      \`SELECT h.name FROM Hashtags h
+      `SELECT h.name FROM Hashtags h
        JOIN PostHashtags ph ON h.id = ph.hashtagId
-       WHERE ph.postId = ?\`,
+       WHERE ph.postId = ?`,
       [post.id]
     );
     post.likes = likes;
@@ -137,11 +137,11 @@ const getPosts = async (req, res, next) => {
     const totalCount = countRows[0].total;
 
     const [posts] = await pool.execute(
-      \`SELECT p.*, u.username 
+      `SELECT p.*, u.username 
        FROM Posts p 
        JOIN Users u ON p.userId = u.id 
        ORDER BY p.createdAt DESC
-       LIMIT ? OFFSET ?\`,
+       LIMIT ? OFFSET ?`,
       [String(pageSize), String(offset)] // passing as strings to avoid mysql2 implicit typing issues with LIMIT dynamically
     );
 
@@ -159,11 +159,11 @@ const getPosts = async (req, res, next) => {
 const getUserPosts = async (req, res, next) => {
   try {
     const [posts] = await pool.execute(
-      \`SELECT p.*, u.username 
+      `SELECT p.*, u.username 
        FROM Posts p 
        JOIN Users u ON p.userId = u.id 
        WHERE p.userId = ?
-       ORDER BY p.createdAt DESC\`,
+       ORDER BY p.createdAt DESC`,
       [req.params.userId]
     );
 

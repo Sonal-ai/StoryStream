@@ -20,16 +20,16 @@ const getUserProfile = async (req, res, next) => {
     const user = users[0];
 
     const [followers] = await pool.execute(
-      \`SELECT u.id, u.username FROM Users u 
+      `SELECT u.id, u.username FROM Users u 
        JOIN Follows f ON u.id = f.followerId 
-       WHERE f.followingId = ?\`,
+       WHERE f.followingId = ?`,
       [userId]
     );
 
     const [following] = await pool.execute(
-      \`SELECT u.id, u.username FROM Users u 
+      `SELECT u.id, u.username FROM Users u 
        JOIN Follows f ON u.id = f.followingId 
-       WHERE f.followerId = ?\`,
+       WHERE f.followerId = ?`,
       [userId]
     );
 

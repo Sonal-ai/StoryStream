@@ -1,10 +1,10 @@
 const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST || 'localhost',
-  user: process.env.MYSQL_USER || 'root',
-  password: process.env.MYSQL_PASSWORD || 'password',
-  database: process.env.MYSQL_DATABASE || 'storystream',
+  host: process.env.MYSQL_HOST,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -14,6 +14,10 @@ const initializeSchema = async () => {
   try {
     const connection = await pool.getConnection();
 
+    // Database creation
+    await connection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.MYSQL_DATABASE}`);
+
+    // Users table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS Users (
         id VARCHAR(36) PRIMARY KEY,
@@ -26,6 +30,7 @@ const initializeSchema = async () => {
       )
     `);
 
+    // Posts table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS Posts (
         id VARCHAR(36) PRIMARY KEY,
@@ -38,6 +43,7 @@ const initializeSchema = async () => {
       )
     `);
 
+    // Comments table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS Comments (
         id VARCHAR(36) PRIMARY KEY,
@@ -51,6 +57,7 @@ const initializeSchema = async () => {
       )
     `);
 
+    // Hashtags table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS Hashtags (
         id VARCHAR(36) PRIMARY KEY,
@@ -61,6 +68,7 @@ const initializeSchema = async () => {
       )
     `);
 
+    // Likes table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS Likes (
         userId VARCHAR(36) NOT NULL,
@@ -71,6 +79,7 @@ const initializeSchema = async () => {
       )
     `);
 
+    // Follows table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS Follows (
         followerId VARCHAR(36) NOT NULL,
@@ -81,6 +90,7 @@ const initializeSchema = async () => {
       )
     `);
 
+    // PostHashtags table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS PostHashtags (
         postId VARCHAR(36) NOT NULL,
