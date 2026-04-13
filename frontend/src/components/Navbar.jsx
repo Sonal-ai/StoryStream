@@ -48,9 +48,11 @@ const Navbar = () => {
           <Link to="/notifications" className="nav-icon-btn" title="Notifications"><Bell size={20} /></Link>
           {user && (
             <Link to={`/profile/${user.username}`} className="nav-icon-btn" title="Profile">
-              {user.profile_picture
-                ? <img src={user.profile_picture} alt={user.username} className="nav-avatar" />
-                : <User size={20} />}
+              <img
+                src={user.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`}
+                alt={user.username}
+                className="nav-avatar"
+              />
             </Link>
           )}
           <button className="nav-icon-btn danger" onClick={handleLogout} title="Logout">
