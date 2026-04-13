@@ -1,4 +1,4 @@
-# StoryStream 🌊
+# StoryStream 
 
 A production-ready, full-stack social media platform inspired by Twitter — built for inclusivity, safety, and great developer experience.
 
