@@ -4,6 +4,13 @@ const path  = require('path');
 require('dotenv').config();
 
 /**
+ * SSL config for cloud-hosted MySQL (Aiven, PlanetScale, etc.).
+ * Enabled when NODE_ENV=production or DB_SSL=true.
+ */
+const useSSL = process.env.NODE_ENV === 'production' || process.env.DB_SSL === 'true';
+const sslConfig = useSSL ? { ssl: { rejectUnauthorized: false } } : {};
+
+/**
  * Main connection pool for all API queries.
  * NOTE: multipleStatements is intentionally OFF here.
  * execute() uses MySQL's binary prepared-statement protocol;
@@ -15,12 +22,13 @@ const pool = mysql.createPool({
   user:            process.env.DB_USER,
   password:        process.env.DB_PASSWORD,
   database:        process.env.DB_NAME,
-  port:            Number(process.env.DB_PORT) || 3306,
+  port:            Number(process.env.DB_PORT),
   waitForConnections: true,
   connectionLimit:    10,
   queueLimit:         0,
   enableKeepAlive:    true,
   keepAliveInitialDelay: 0,
+  ...sslConfig,
 });
 
 /**
@@ -38,6 +46,7 @@ const testConnection = async () => {
       user:     process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       port:     Number(process.env.DB_PORT) || 3306,
+      ...sslConfig,
     });
     await rootConn.query(
       `CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
@@ -54,6 +63,7 @@ const testConnection = async () => {
         database:           process.env.DB_NAME,
         port:               Number(process.env.DB_PORT) || 3306,
         multipleStatements: true, // only here — isolated from the main pool
+        ...sslConfig,
       });
       const schemaSql = fs.readFileSync(schemaPath, 'utf8');
       await schemaConn.query(schemaSql);
