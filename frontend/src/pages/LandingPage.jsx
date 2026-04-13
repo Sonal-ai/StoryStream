@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Sparkles, Zap, Shield, Hash, Bell, Users, MessageCircle,
-  Heart, Search, Moon, ArrowRight, GitFork, Link2,
-  ExternalLink, Play, FileText, ChevronDown, Star, Globe
+  Heart, Search, Moon, ArrowRight, Play, FileText, ChevronDown, Star, Globe
 } from 'lucide-react';
 
 /* ─── Static data ─────────────────────────────────────── */
@@ -235,8 +234,8 @@ const LandingPage = () => {
                 <span className="lp-team-role">{member.role}</span>
                 <p className="lp-team-desc">{member.desc}</p>
                 <div className="lp-team-links">
-                  <a href={member.github}   className="lp-team-link" target="_blank" rel="noreferrer"><Github    size={16} /></a>
-                  <a href={member.linkedin} className="lp-team-link" target="_blank" rel="noreferrer"><Linkedin  size={16} /></a>
+                  <a href={member.github}   className="lp-team-link" target="_blank" rel="noreferrer"><GitHub    size={16} /></a>
+                  <a href={member.linkedin} className="lp-team-link" target="_blank" rel="noreferrer"><LinkedIn  size={16} /></a>
                 </div>
               </div>
             ))}
