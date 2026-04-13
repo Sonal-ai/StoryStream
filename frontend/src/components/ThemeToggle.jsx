@@ -1,9 +1,9 @@
 import { useTheme } from '../context/ThemeContext';
 
 /**
- * Animated dark/light toggle.
- * Dark mode → Moon with stars orbiting
- * Light mode → Sun peeking behind fluffy clouds
+ * Animated theme toggle:
+ * DARK  → crescent moon on left + twinkling stars on right
+ * LIGHT → golden sun knob slides RIGHT under a white cloud
  */
 const ThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();
@@ -16,35 +16,36 @@ const ThemeToggle = () => {
       title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       aria-label="Toggle theme"
     >
-      <div className="toggle-track">
-        {/* Stars (dark mode) */}
-        <span className="star s1" />
-        <span className="star s2" />
-        <span className="star s3" />
+      <div className="tt-track">
+        {/* ── Stars (right side, dark mode only) ── */}
+        <span className="tt-star tt-s1" />
+        <span className="tt-star tt-s2" />
+        <span className="tt-star tt-s3" />
+        <span className="tt-star tt-s4" />
 
-        {/* Cloud (light mode) */}
-        <div className="cloud">
-          <span className="cloud-body" />
-          <span className="cloud-bump1" />
-          <span className="cloud-bump2" />
-        </div>
-
-        {/* The sliding knob: moon or sun */}
-        <div className="toggle-knob">
+        {/* ── Knob: moon (dark) / sun (light) ── */}
+        <div className="tt-knob">
           {isDark ? (
-            /* Moon shape */
-            <div className="moon-icon">
-              <div className="moon-crescent" />
+            /* Crescent moon — cream circle with a dark cutout */
+            <div className="tt-moon">
+              <div className="tt-moon-cut" />
             </div>
           ) : (
-            /* Sun shape */
-            <div className="sun-icon">
+            /* Sun — orange core + radiating rays */
+            <div className="tt-sun">
               {[...Array(8)].map((_, i) => (
-                <span key={i} className="sun-ray" style={{ transform: `rotate(${i * 45}deg)` }} />
+                <div key={i} className="tt-ray" style={{ rotate: `${i * 45}deg` }} />
               ))}
-              <div className="sun-core" />
+              <div className="tt-sun-core" />
             </div>
           )}
+        </div>
+
+        {/* ── Cloud (right side, light mode only, layered ABOVE knob) ── */}
+        <div className="tt-cloud">
+          <div className="tt-cloud-bump1" />
+          <div className="tt-cloud-bump2" />
+          <div className="tt-cloud-body" />
         </div>
       </div>
     </button>

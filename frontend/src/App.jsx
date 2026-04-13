@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -19,21 +20,25 @@ const AppRoutes = () => {
 
   return (
     <>
+      {/* Navbar only for authenticated, non-landing pages */}
       {user && <Navbar />}
       <Routes>
-        {/* Public routes */}
-        <Route path="/login"    element={!user ? <LoginPage />    : <Navigate to="/" />} />
-        <Route path="/register" element={!user ? <RegisterPage /> : <Navigate to="/" />} />
+        {/* Public landing page — always accessible */}
+        <Route path="/"        element={<LandingPage />} />
 
-        {/* Protected routes */}
-        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-        <Route path="/profile/:username" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/notifications"     element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-        <Route path="/post/:id"          element={<ProtectedRoute><PostDetailPage /></ProtectedRoute>} />
-        <Route path="/search"                       element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
-        <Route path="/profile/:username/followers"   element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
-        <Route path="/profile/:username/following"   element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
-        <Route path="/hashtag/:tag"                  element={<ProtectedRoute><HashtagPage /></ProtectedRoute>} />
+        {/* Auth routes — redirect home if already logged in */}
+        <Route path="/login"    element={!user ? <LoginPage />    : <Navigate to="/feed" />} />
+        <Route path="/register" element={!user ? <RegisterPage /> : <Navigate to="/feed" />} />
+
+        {/* Protected app routes */}
+        <Route path="/feed"                              element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path="/profile/:username"                 element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/notifications"                     element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+        <Route path="/post/:id"                          element={<ProtectedRoute><PostDetailPage /></ProtectedRoute>} />
+        <Route path="/search"                            element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+        <Route path="/profile/:username/followers"       element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
+        <Route path="/profile/:username/following"       element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
+        <Route path="/hashtag/:tag"                      element={<ProtectedRoute><HashtagPage /></ProtectedRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
