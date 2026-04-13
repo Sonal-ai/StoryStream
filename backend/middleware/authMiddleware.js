@@ -40,4 +40,29 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+/**
+ * Optional auth middleware — attaches req.user if a valid token is present,
+ * but does NOT block the request if no token is provided.
+ * Useful for endpoints that return extra data for logged-in users.
+ */
+const optionalProtect = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
+
+    const token = authHeader.split(' ')[1];
+    const decoded = verifyToken(token);
+
+    const [rows] = await pool.execute(
+      'SELECT id, username, email, bio, profile_picture FROM users WHERE id = ?',
+      [decoded.id]
+    );
+    if (rows.length > 0) req.user = rows[0];
+    next();
+  } catch {
+    // Invalid/expired token — just continue as unauthenticated
+    next();
+  }
+};
+
+module.exports = { protect, optionalProtect };

@@ -2,39 +2,40 @@ import { useState } from 'react';
 import { followUser, unfollowUser } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus, UserMinus } from 'lucide-react';
+import ConfirmModal from './ConfirmModal';
 import toast from 'react-hot-toast';
 
-/**
- * Follow/Unfollow button with optimistic UI updates.
- * @param {string}  username      - Target user's username
- * @param {boolean} initialFollow - Initial follow state
- * @param {Function} onToggle     - Callback with { following, followers_count }
- */
 const FollowButton = ({ username, initialFollow = false, onToggle }) => {
-  const { user }       = useAuth();
-  const [following, setFollowing] = useState(initialFollow);
-  const [loading, setLoading]     = useState(false);
+  const { user }                    = useAuth();
+  const [following, setFollowing]   = useState(initialFollow);
+  const [loading, setLoading]       = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  // Don't render on own profile
   if (!user || user.username === username) return null;
 
-  const handleToggle = async () => {
+  const handleFollow = async () => {
     setLoading(true);
-    // Optimistic update
-    setFollowing((prev) => !prev);
     try {
-      let res;
-      if (following) {
-        res = await unfollowUser(username);
-        toast.success(`Unfollowed @${username}`);
-      } else {
-        res = await followUser(username);
-        toast.success(`Following @${username}!`);
-      }
+      const res = await followUser(username);
+      setFollowing(true);
+      toast.success(`Following @${username}!`);
       onToggle?.(res.data.data);
     } catch (err) {
-      // Revert on error
-      setFollowing((prev) => !prev);
+      toast.error(err.response?.data?.message || 'Action failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    setShowConfirm(false);
+    setLoading(true);
+    try {
+      const res = await unfollowUser(username);
+      setFollowing(false);
+      toast.success(`Unfollowed @${username}`);
+      onToggle?.(res.data.data);
+    } catch (err) {
       toast.error(err.response?.data?.message || 'Action failed');
     } finally {
       setLoading(false);
@@ -42,15 +43,26 @@ const FollowButton = ({ username, initialFollow = false, onToggle }) => {
   };
 
   return (
-    <button
-      className={`follow-btn ${following ? 'unfollow' : 'follow'}`}
-      onClick={handleToggle}
-      disabled={loading}
-    >
-      {following
-        ? <><UserMinus size={15} /> Unfollow</>
-        : <><UserPlus  size={15} /> Follow</>}
-    </button>
+    <>
+      <button
+        className={`follow-btn ${following ? 'unfollow' : 'follow'}`}
+        onClick={following ? () => setShowConfirm(true) : handleFollow}
+        disabled={loading}
+      >
+        {following
+          ? <><UserMinus size={15} /> Unfollow</>
+          : <><UserPlus  size={15} /> Follow</>}
+      </button>
+
+      <ConfirmModal
+        isOpen={showConfirm}
+        title="Unfollow user?"
+        message={`Are you sure you want to unfollow @${username}? You'll stop seeing their posts in your feed.`}
+        confirmLabel="Unfollow"
+        onConfirm={handleUnfollow}
+        onCancel={() => setShowConfirm(false)}
+      />
+    </>
   );
 };
 

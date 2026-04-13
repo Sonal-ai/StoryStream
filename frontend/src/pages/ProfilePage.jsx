@@ -4,7 +4,7 @@ import { getUserProfile, getUserPosts, updateProfile } from '../api';
 import { useAuth } from '../context/AuthContext';
 import PostCard from '../components/PostCard';
 import FollowButton from '../components/FollowButton';
-import { Calendar, Edit2, Save, X } from 'lucide-react';
+import { Calendar, Edit2, Save, X, MapPin, Cake } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ProfilePage = () => {
@@ -15,14 +15,14 @@ const ProfilePage = () => {
   const [posts, setPosts]       = useState([]);
   const [loading, setLoading]   = useState(true);
   const [editing, setEditing]   = useState(false);
-  const [editForm, setEditForm] = useState({ bio: '', profile_picture: '' });
-  const [saving, setSaving]     = useState(false);
+  const [editForm, setEditForm] = useState({
+    bio: '', profile_picture: '', date_of_birth: '', location: ''
+  });
+  const [saving, setSaving] = useState(false);
 
   const isOwner = user?.username === username;
 
-  useEffect(() => {
-    loadProfile();
-  }, [username]);
+  useEffect(() => { loadProfile(); }, [username]);
 
   const loadProfile = async () => {
     setLoading(true);
@@ -31,11 +31,14 @@ const ProfilePage = () => {
         getUserProfile(username),
         getUserPosts(username, { limit: 20 }),
       ]);
-      setProfile(profileRes.data.data.user);
-      setPosts(postsRes.data.data.posts);
+      const p = profileRes.data.data.user;
+      setProfile(p);
+      setPosts(postsRes.data.data.posts ?? []);
       setEditForm({
-        bio: profileRes.data.data.user.bio || '',
-        profile_picture: profileRes.data.data.user.profile_picture || '',
+        bio:            p.bio             || '',
+        profile_picture: p.profile_picture || '',
+        date_of_birth:  p.date_of_birth   ? p.date_of_birth.split('T')[0] : '',
+        location:       p.location        || '',
       });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to load profile');
@@ -76,6 +79,13 @@ const ProfilePage = () => {
   const joinedDate = (d) =>
     new Date(d).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
+  const formatDob = (d) => {
+    if (!d) return null;
+    return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const field = (k) => (e) => setEditForm((f) => ({ ...f, [k]: e.target.value }));
+
   if (loading) return <div className="loading-screen"><div className="spinner" /></div>;
   if (!profile) return <div className="error-screen"><p>User not found.</p></div>;
 
@@ -95,19 +105,28 @@ const ProfilePage = () => {
 
               {editing ? (
                 <div className="edit-form">
-                  <input
-                    type="text"
-                    placeholder="Bio"
-                    value={editForm.bio}
-                    onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                    maxLength={200}
-                  />
-                  <input
-                    type="url"
-                    placeholder="Profile picture URL"
-                    value={editForm.profile_picture}
-                    onChange={(e) => setEditForm({ ...editForm, profile_picture: e.target.value })}
-                  />
+                  <div className="edit-field-group">
+                    <label>Bio</label>
+                    <textarea
+                      placeholder="Write a bio..."
+                      value={editForm.bio}
+                      onChange={field('bio')}
+                      maxLength={200}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="edit-field-group">
+                    <label>Profile Picture URL</label>
+                    <input type="url" placeholder="https://..." value={editForm.profile_picture} onChange={field('profile_picture')} />
+                  </div>
+                  <div className="edit-field-group">
+                    <label>Location <span className="optional">(optional)</span></label>
+                    <input type="text" placeholder="e.g. New Delhi, India" value={editForm.location} onChange={field('location')} maxLength={100} />
+                  </div>
+                  <div className="edit-field-group">
+                    <label>Date of Birth <span className="optional">(optional)</span></label>
+                    <input type="date" value={editForm.date_of_birth} onChange={field('date_of_birth')} />
+                  </div>
                   <div className="edit-actions">
                     <button className="btn-primary" onClick={handleSave} disabled={saving}>
                       <Save size={15} /> {saving ? 'Saving...' : 'Save'}
@@ -120,9 +139,21 @@ const ProfilePage = () => {
               ) : (
                 <>
                   <p className="profile-bio">{profile.bio || 'No bio yet.'}</p>
-                  <p className="profile-joined">
-                    <Calendar size={13} /> Joined {joinedDate(profile.created_at)}
-                  </p>
+                  <div className="profile-meta-row">
+                    {profile.location && (
+                      <span className="profile-meta-item">
+                        <MapPin size={13} /> {profile.location}
+                      </span>
+                    )}
+                    {profile.date_of_birth && (
+                      <span className="profile-meta-item">
+                        <Cake size={13} /> {formatDob(profile.date_of_birth)}
+                      </span>
+                    )}
+                    <span className="profile-meta-item profile-joined">
+                      <Calendar size={13} /> Joined {joinedDate(profile.created_at)}
+                    </span>
+                  </div>
                 </>
               )}
             </div>

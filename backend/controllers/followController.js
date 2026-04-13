@@ -150,15 +150,19 @@ const getFollowers = async (req, res, next) => {
     }
 
     const userId = userRows[0].id;
+    const viewerId = req.user?.id ?? null;
 
     const [followers] = await pool.query(
-      `SELECT u.id, u.username, u.bio, u.profile_picture, f.created_at AS followed_at
+      `SELECT u.id, u.username, u.bio, u.profile_picture, f.created_at AS followed_at,
+              IF(? IS NOT NULL,
+                EXISTS(SELECT 1 FROM follows WHERE follower_id = ? AND following_id = u.id),
+                FALSE) AS is_followed_back
        FROM follows f
        JOIN users u ON u.id = f.follower_id
        WHERE f.following_id = ?
        ORDER BY f.created_at DESC
        LIMIT ? OFFSET ?`,
-      [userId, limit, offset]
+      [viewerId, viewerId, userId, limit, offset]
     );
 
     const [[{ total }]] = await pool.execute(

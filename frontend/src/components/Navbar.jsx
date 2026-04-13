@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Bell, Home, Search, LogOut, User, Sparkles } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
+import { Bell, Home, Search, LogOut, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Navbar = () => {
-  const { user, logout }  = useAuth();
-  const navigate          = useNavigate();
+  const { user, logout }    = useAuth();
+  const navigate            = useNavigate();
   const [search, setSearch] = useState('');
 
   const handleLogout = () => {
@@ -19,6 +20,7 @@ const Navbar = () => {
     e.preventDefault();
     if (search.trim()) {
       navigate(`/search?q=${encodeURIComponent(search.trim())}`);
+      setSearch('');
     }
   };
 
@@ -46,6 +48,10 @@ const Navbar = () => {
         <div className="navbar-actions">
           <Link to="/"              className="nav-icon-btn" title="Home"><Home size={20} /></Link>
           <Link to="/notifications" className="nav-icon-btn" title="Notifications"><Bell size={20} /></Link>
+
+          {/* Animated Theme toggle */}
+          <ThemeToggle />
+
           {user && (
             <Link to={`/profile/${user.username}`} className="nav-icon-btn" title="Profile">
               <img

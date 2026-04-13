@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Trash2, X, Check } from 'lucide-react';
 import { likePost, unlikePost, deletePost } from '../api';
@@ -6,19 +6,26 @@ import { useAuth } from '../context/AuthContext';
 import CommentSection from './CommentSection';
 import toast from 'react-hot-toast';
 
-/**
- * Renders a single post card with like, inline comments, hashtags, and delete.
- */
 const PostCard = ({ post, onDelete, onLikeToggle }) => {
-  const { user }          = useAuth();
-  const [likeCount, setLikeCount]     = useState(Number(post.like_count) || 0);
-  const [liked, setLiked]             = useState(Boolean(post.liked_by_me));
-  const [loading, setLoading]         = useState(false);
+  const { user }              = useAuth();
+  const [likeCount, setLikeCount]       = useState(Number(post.like_count) || 0);
+  const [liked, setLiked]               = useState(Boolean(post.liked_by_me));
+  const [loading, setLoading]           = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [heartAnim, setHeartAnim]       = useState(false);   // pop pulse
+  const [floatHearts, setFloatHearts]   = useState([]);      // floating ❤️
+  const heartRef = useRef(null);
+
+  const spawnFloatingHeart = () => {
+    const id = Date.now();
+    setFloatHearts((prev) => [...prev, id]);
+    setTimeout(() => setFloatHearts((prev) => prev.filter((h) => h !== id)), 900);
+  };
 
   const handleLike = async () => {
     if (!user) return toast.error('Login to like posts');
+    if (loading) return;
     setLoading(true);
     try {
       if (liked) {
@@ -29,6 +36,10 @@ const PostCard = ({ post, onDelete, onLikeToggle }) => {
         const res = await likePost(post.id);
         setLiked(true);
         setLikeCount(res.data.data.like_count);
+        // Trigger animations
+        setHeartAnim(true);
+        setTimeout(() => setHeartAnim(false), 400);
+        spawnFloatingHeart();
       }
       onLikeToggle?.();
     } catch (err) {
@@ -73,17 +84,12 @@ const PostCard = ({ post, onDelete, onLikeToggle }) => {
           </div>
         </Link>
 
-        {/* Delete — shows inline confirm row */}
         {user?.id === post.author_id && (
           confirmDelete ? (
             <div className="delete-confirm-row">
               <span className="delete-confirm-label">Delete post?</span>
-              <button className="confirm-yes-btn" onClick={handleDelete} title="Yes, delete">
-                <Check size={14} /> Yes
-              </button>
-              <button className="confirm-no-btn" onClick={() => setConfirmDelete(false)} title="Cancel">
-                <X size={14} />
-              </button>
+              <button className="confirm-yes-btn" onClick={handleDelete}><Check size={14} /> Yes</button>
+              <button className="confirm-no-btn" onClick={() => setConfirmDelete(false)}><X size={14} /></button>
             </div>
           ) : (
             <button className="post-delete-btn" onClick={() => setConfirmDelete(true)} title="Delete post">
@@ -101,29 +107,32 @@ const PostCard = ({ post, onDelete, onLikeToggle }) => {
         <img src={post.image_url} alt="Post attachment" className="post-image" />
       )}
 
-      {/* Hashtags — link to /hashtag/:tag */}
+      {/* Hashtags */}
       {post.hashtags?.length > 0 && (
         <div className="post-hashtags">
           {post.hashtags.map((tag) => (
-            <Link key={tag} to={`/hashtag/${tag}`} className="hashtag-chip">
-              #{tag}
-            </Link>
+            <Link key={tag} to={`/hashtag/${tag}`} className="hashtag-chip">#{tag}</Link>
           ))}
         </div>
       )}
 
       {/* Actions */}
       <div className="post-actions">
-        <button
-          className={`action-btn like-btn ${liked ? 'liked' : ''}`}
-          onClick={handleLike}
-          disabled={loading}
-        >
-          <Heart size={17} fill={liked ? 'currentColor' : 'none'} />
-          <span>{likeCount}</span>
-        </button>
+        {/* Like button with floating heart effect */}
+        <div className="like-wrapper" ref={heartRef}>
+          {floatHearts.map((id) => (
+            <span key={id} className="floating-heart" aria-hidden>❤️</span>
+          ))}
+          <button
+            className={`action-btn like-btn ${liked ? 'liked' : ''} ${heartAnim ? 'popping' : ''}`}
+            onClick={handleLike}
+            disabled={loading}
+          >
+            <Heart size={17} fill={liked ? 'currentColor' : 'none'} />
+            <span>{likeCount}</span>
+          </button>
+        </div>
 
-        {/* Toggle comments inline */}
         <button
           className={`action-btn comment-btn ${showComments ? 'active' : ''}`}
           onClick={() => setShowComments((v) => !v)}

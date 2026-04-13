@@ -57,8 +57,20 @@ const testConnection = async () => {
       });
       const schemaSql = fs.readFileSync(schemaPath, 'utf8');
       await schemaConn.query(schemaSql);
-      await schemaConn.end();
       console.log('✅ Base Database Schema loaded from schema.sql');
+
+      // ── Column migrations for existing databases ──────────────────────────
+      // Catches ER_DUP_FIELDNAME (1060) so re-runs are safe (idempotent).
+      const migrations = [
+        "ALTER TABLE users ADD COLUMN date_of_birth DATE DEFAULT NULL",
+        "ALTER TABLE users ADD COLUMN location      VARCHAR(100) DEFAULT NULL",
+      ];
+      for (const sql of migrations) {
+        try { await schemaConn.query(sql); } catch (e) {
+          if (e.errno !== 1060) throw e; // 1060 = "Duplicate column name" — already exists, fine
+        }
+      }
+      await schemaConn.end();
     }
 
     // ── Step 3: Verify the main pool works ──────────────────────────────────

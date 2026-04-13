@@ -42,6 +42,34 @@
   --shadow-glow:   0 0 20px var(--accent-glow);
 }
 
+/* ─── Light Mode Overrides ───────────────────────────────────── */
+[data-theme="light"] {
+  --bg-base:       #f4f4fc;
+  --bg-surface:    #ffffff;
+  --bg-card:       #ffffff;
+  --bg-hover:      #ebebf8;
+  --border:        #dcdcf0;
+  --border-light:  #c8c8e8;
+  --text-primary:  #1a1a2e;
+  --text-secondary:#4a4a6a;
+  --text-muted:    #8888aa;
+  /* Warm off-white reading palette — easy on the eyes */
+  --bg-base:       #eae6df;
+  --bg-surface:    #f2ede6;
+  --bg-card:       #f5f0e8;
+  --bg-hover:      #e2ddd6;
+  --border:        #cdc8c0;
+  --border-light:  #bab5ad;
+  --text-primary:  #1c1a17;
+  --text-secondary:#4a4640;
+  --text-muted:    #7a756e;
+  --shadow-card:   0 4px 24px rgba(0,0,0,0.09);
+  --shadow-hover:  0 8px 40px rgba(0,0,0,0.14);
+}
+[data-theme="light"] .navbar         { background: rgba(234,230,223,0.90); }
+[data-theme="light"] .navbar-search input { background: var(--bg-hover); }
+[data-theme="light"] .auth-page      { background: var(--bg-base); }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
@@ -765,6 +793,20 @@ button { cursor: pointer; font-family: inherit; }
 }
 .follow-btn:disabled { opacity: 0.5; cursor: wait; }
 
+/* Inline unfollow confirmation prompt */
+.unfollow-confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: fadeSlideUp 0.15s ease;
+}
+.unfollow-confirm-label {
+  font-size: 13px;
+  color: var(--danger);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 /* ─── Profile Page ──────────────────────────────────────────── */
 .profile-card {
   background: var(--bg-card);
@@ -1099,3 +1141,296 @@ button { cursor: pointer; font-family: inherit; }
 }
 .back-link:hover { color: var(--accent-light); }
 
+/* ─── Page Transitions ───────────────────────────────────────── */
+.page-layout  { animation: pageFadeIn 0.35s cubic-bezier(0.22,1,0.36,1); }
+.post-card    { animation: cardSlideIn 0.3s cubic-bezier(0.22,1,0.36,1) both; }
+.auth-card    { animation: pageFadeIn 0.4s cubic-bezier(0.22,1,0.36,1); }
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes cardSlideIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* Smooth color transitions when switching themes */
+body, .navbar, .post-card, .profile-card, .auth-card,
+.create-post-card, .comment-section, .notification-item {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
+}
+
+/* ─── Like Heart Animation ───────────────────────────────────── */
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.5); }
+  60%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.like-btn.popping svg {
+  animation: heartPop 0.4s cubic-bezier(0.36,0.07,0.19,0.97);
+  color: var(--like-active);
+}
+
+/* ─── Floating Heart Particle ────────────────────────────────── */
+.like-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateY(0)    scale(1);   }
+  100% { opacity: 0; transform: translateY(-52px) scale(1.5); }
+}
+.floating-heart {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  pointer-events: none;
+  animation: floatUp 0.85s ease forwards;
+  z-index: 10;
+}
+
+/* ─── Profile Meta Row ───────────────────────────────────────── */
+.profile-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+.profile-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ─── Edit Field Groups ──────────────────────────────────────── */
+.edit-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.edit-field-group label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.edit-field-group input,
+.edit-field-group textarea {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.edit-field-group input:focus,
+.edit-field-group textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.edit-field-group textarea { resize: vertical; min-height: 72px; }
+
+/* ─── Confirm Modal ──────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: overlayIn 0.2s ease;
+}
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.modal-box {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 36px 32px 28px;
+  width: min(90vw, 400px);
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.88) translateY(16px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+.modal-close {
+  position: absolute;
+  top: 14px; right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  transition: color 0.2s;
+}
+.modal-close:hover { color: var(--text-primary); }
+.modal-icon {
+  width: 52px; height: 52px;
+  background: rgba(243,139,168,0.12);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: var(--danger);
+}
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+.modal-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.modal-cancel-btn {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.modal-cancel-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+.modal-confirm-btn {
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.modal-confirm-btn.danger {
+  background: var(--danger);
+}
+.modal-confirm-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ─── Theme Toggle Switch ────────────────────────────────────── */
+.theme-toggle {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.toggle-track {
+  position: relative;
+  width: 54px;
+  height: 28px;
+  border-radius: 99px;
+  overflow: hidden;
+  transition: background 0.5s ease;
+}
+/* Dark track = deep night blue */
+.theme-toggle.dark  .toggle-track { background: #1a1a3e; border: 1.5px solid #3a3a6e; }
+/* Light track = sky blue */
+.theme-toggle.light .toggle-track { background: #87ceeb; border: 1.5px solid #5bafd6; }
+
+/* Stars */
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  transition: opacity 0.4s ease;
+}
+.star.s1 { width: 3px; height: 3px; top: 6px;  left: 8px;  animation: twinkle 2.1s infinite; }
+.star.s2 { width: 2px; height: 2px; top: 14px; left: 16px; animation: twinkle 1.7s infinite 0.4s; }
+.star.s3 { width: 2px; height: 2px; top: 8px;  left: 22px; animation: twinkle 2.4s infinite 0.8s; }
+.theme-toggle.light .star { opacity: 0; }
+.theme-toggle.dark  .star { opacity: 1; }
+@keyframes twinkle {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.2; }
+}
+
+/* Cloud (light mode only) */
+.cloud {
+  position: absolute;
+  top: 7px;
+  left: 5px;
+  transition: opacity 0.4s ease;
+}
+.cloud-body  { position: absolute; width: 22px; height: 10px; background: #fff; border-radius: 99px; top: 4px; left: 0; }
+.cloud-bump1 { position: absolute; width: 12px; height: 12px; background: #fff; border-radius: 50%; top: 0; left: 4px; }
+.cloud-bump2 { position: absolute; width: 9px;  height: 9px;  background: #fff; border-radius: 50%; top: 1px; left: 11px; }
+.theme-toggle.dark  .cloud { opacity: 0; }
+.theme-toggle.light .cloud { opacity: 1; }
+
+/* Knob */
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), background 0.4s;
+  z-index: 2;
+}
+.theme-toggle.dark  .toggle-knob { transform: translateX(3px);  background: #e8e8c0; }
+.theme-toggle.light .toggle-knob { transform: translateX(27px); background: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.6); }
+
+/* Moon inside knob */
+.moon-icon { position: relative; width: 14px; height: 14px; }
+.moon-crescent {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #1a1a3e;
+  box-shadow: 4px -2px 0 0 #e8e8c0;
+}
+
+/* Sun inside knob */
+.sun-icon { position: relative; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; }
+.sun-core {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #ffa500;
+  position: relative;
+  z-index: 1;
+}
+.sun-ray {
+  position: absolute;
+  width: 2px; height: 5px;
+  background: #ffa500;
+  border-radius: 1px;
+  top: 50%; left: 50%;
+  transform-origin: 50% 9px;
+  margin-left: -1px; margin-top: -9px;
+}

@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS users (
   password        VARCHAR(255)  NOT NULL,
   bio             TEXT,
   profile_picture VARCHAR(500)  DEFAULT NULL,
-  is_active       TINYINT(1)    NOT NULL DEFAULT 1,  -- soft delete flag
+  date_of_birth   DATE          DEFAULT NULL,
+  location        VARCHAR(100)  DEFAULT NULL,
+  is_active       TINYINT(1)    NOT NULL DEFAULT 1,
   created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 

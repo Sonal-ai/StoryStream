@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getFollowers, followUser, unfollowUser } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, Users } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 import toast from 'react-hot-toast';
 
 const FollowersPage = () => {
@@ -11,31 +12,41 @@ const FollowersPage = () => {
   const [followers, setFollowers] = useState([]);
   const [loading, setLoading]    = useState(true);
   const [error, setError]        = useState('');
+  const [confirmTarget, setConfirmTarget] = useState(null); // follower to unfollow
+
+  // Only show Follow Back buttons on the logged-in user's OWN followers list
+  const isOwnProfile = user?.username === username;
 
   useEffect(() => {
     getFollowers(username)
-      .then((res) => setFollowers(res.data?.data?.followers ?? []))
+      .then((res) => {
+        const list = res.data?.data?.followers ?? [];
+        setFollowers(list.map((f) => ({ ...f, _following: Boolean(f.is_followed_back) })));
+      })
       .catch(() => setError('Failed to load followers.'))
       .finally(() => setLoading(false));
   }, [username]);
 
-  const handleToggleFollow = async (follower) => {
-    const isFollowing = follower._following;
+  const handleFollow = async (follower) => {
     try {
-      if (isFollowing) {
-        await unfollowUser(follower.username);
-        toast.success(`Unfollowed @${follower.username}`);
-      } else {
-        await followUser(follower.username);
-        toast.success(`Following @${follower.username}`);
-      }
-      setFollowers((prev) =>
-        prev.map((f) =>
-          f.id === follower.id ? { ...f, _following: !isFollowing } : f
-        )
-      );
+      await followUser(follower.username);
+      setFollowers((prev) => prev.map((f) => f.id === follower.id ? { ...f, _following: true } : f));
+      toast.success(`Following @${follower.username}!`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Action failed');
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!confirmTarget) return;
+    try {
+      await unfollowUser(confirmTarget.username);
+      setFollowers((prev) => prev.map((f) => f.id === confirmTarget.id ? { ...f, _following: false } : f));
+      toast.success(`Unfollowed @${confirmTarget.username}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Action failed');
+    } finally {
+      setConfirmTarget(null);
     }
   };
 
@@ -75,12 +86,12 @@ const FollowersPage = () => {
                   </div>
                 </Link>
 
-                {/* Show Follow Back / Unfollow only for logged-in users, not own profile */}
-                {user && user.username !== f.username && (
+                {/* Only show Follow Back on own profile's followers list */}
+                {isOwnProfile && user.username !== f.username && (
                   <button
                     className={`follow-btn ${f._following ? 'unfollow' : 'follow'}`}
-                    style={{ flexShrink: 0, marginLeft: 'auto', padding: '7px 16px', fontSize: '13px' }}
-                    onClick={() => handleToggleFollow(f)}
+                    style={{ flexShrink: 0, padding: '7px 16px', fontSize: '13px' }}
+                    onClick={() => f._following ? setConfirmTarget(f) : handleFollow(f)}
                   >
                     {f._following ? 'Unfollow' : 'Follow Back'}
                   </button>
@@ -90,6 +101,15 @@ const FollowersPage = () => {
           ))}
         </ul>
       </main>
+
+      <ConfirmModal
+        isOpen={!!confirmTarget}
+        title="Unfollow user?"
+        message={`Are you sure you want to unfollow @${confirmTarget?.username}?`}
+        confirmLabel="Unfollow"
+        onConfirm={handleUnfollow}
+        onCancel={() => setConfirmTarget(null)}
+      />
     </div>
   );
 };
