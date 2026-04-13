@@ -151,7 +151,7 @@ const getFollowers = async (req, res, next) => {
 
     const userId = userRows[0].id;
 
-    const [followers] = await pool.execute(
+    const [followers] = await pool.query(
       `SELECT u.id, u.username, u.bio, u.profile_picture, f.created_at AS followed_at
        FROM follows f
        JOIN users u ON u.id = f.follower_id
@@ -197,7 +197,7 @@ const getFollowing = async (req, res, next) => {
 
     const userId = userRows[0].id;
 
-    const [following] = await pool.execute(
+    const [following] = await pool.query(
       `SELECT u.id, u.username, u.bio, u.profile_picture, f.created_at AS followed_at
        FROM follows f
        JOIN users u ON u.id = f.following_id

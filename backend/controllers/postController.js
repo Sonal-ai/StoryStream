@@ -150,7 +150,9 @@ const getAllPosts = async (req, res, next) => {
   try {
     const { limit, offset, page } = getPagination(req.query);
 
-    const [posts] = await pool.execute(
+    // pool.query() used here (not execute) because mysql2 prepared statements
+    // reject numeric LIMIT/OFFSET params with ER_WRONG_ARGUMENTS
+    const [posts] = await pool.query(
       `SELECT 
          p.id, p.content, p.image_url, p.created_at,
          u.id AS author_id, u.username, u.profile_picture,
@@ -215,7 +217,8 @@ const getFeed = async (req, res, next) => {
     const userId = req.user.id;
     const { limit, offset, page } = getPagination(req.query);
 
-    const [posts] = await pool.execute(
+    // pool.query() used here because mysql2 prepared statements reject LIMIT/OFFSET
+    const [posts] = await pool.query(
       `SELECT 
          p.id, p.content, p.image_url, p.created_at,
          u.id AS author_id, u.username, u.profile_picture,
@@ -300,7 +303,7 @@ const getPostsByHashtag = async (req, res, next) => {
     const tag = req.params.tag.toLowerCase();
     const { limit, offset, page } = getPagination(req.query);
 
-    const [posts] = await pool.execute(
+    const [posts] = await pool.query(
       `SELECT 
          p.id, p.content, p.image_url, p.created_at,
          u.id AS author_id, u.username, u.profile_picture,

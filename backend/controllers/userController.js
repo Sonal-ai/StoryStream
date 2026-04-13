@@ -103,7 +103,8 @@ const getUserPosts = async (req, res, next) => {
 
     const userId = userRows[0].id;
 
-    const [posts] = await pool.execute(
+    // pool.query() used (not execute) — mysql2 prepared statements reject LIMIT/OFFSET
+    const [posts] = await pool.query(
       `SELECT 
          p.id, p.content, p.image_url, p.created_at,
          u.id AS author_id, u.username, u.profile_picture,
@@ -148,7 +149,8 @@ const searchUsers = async (req, res, next) => {
 
     const searchTerm = `%${q.trim()}%`;
 
-    const [users] = await pool.execute(
+    // pool.query() used (not execute) — mysql2 prepared statements reject LIMIT/OFFSET
+    const [users] = await pool.query(
       `SELECT id, username, bio, profile_picture,
          (SELECT COUNT(*) FROM follows WHERE following_id = u.id) AS followers_count
        FROM users u

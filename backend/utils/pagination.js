@@ -4,11 +4,13 @@
  * @returns {{ limit: number, offset: number, page: number }}
  */
 const getPagination = (query) => {
-  const page = Math.max(1, parseInt(query.page) || 1);
-  const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 10));
+  const page   = Math.max(1, parseInt(query.page)  || 1);
+  const limit  = Math.min(100, Math.max(1, parseInt(query.limit) || 10));
   const offset = (page - 1) * limit;
 
-  return { page, limit, offset };
+  // mysql2 requires LIMIT/OFFSET to be plain JS integers — not strings.
+  // Wrapping in Number() guarantees correct type-binding.
+  return { page, limit: Number(limit), offset: Number(offset) };
 };
 
 /**

@@ -12,7 +12,8 @@ const getNotifications = async (req, res, next) => {
     const userId = req.user.id;
     const { limit, offset, page } = getPagination(req.query);
 
-    const [notifications] = await pool.execute(
+    // pool.query() used (not execute) — mysql2 prepared statements reject LIMIT/OFFSET
+    const [notifications] = await pool.query(
       `SELECT 
          n.id, n.type, n.reference_id, n.is_read, n.created_at,
          u.id AS actor_id, u.username AS actor_username, u.profile_picture AS actor_avatar

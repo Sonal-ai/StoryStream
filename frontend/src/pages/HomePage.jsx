@@ -21,11 +21,13 @@ const HomePage = () => {
     try {
       const fetchFn = tab === 'feed' ? getFeed : getAllPosts;
       const res     = await fetchFn({ page: currentPage, limit: 10 });
-      const { posts: newPosts, pagination } = res.data;
+      // Backend returns: { success, data: { posts: [] }, pagination: {} }
+      const newPosts   = res.data?.data?.posts ?? [];
+      const pagination = res.data?.pagination  ?? {};
 
       setPosts((prev) => reset ? newPosts : [...prev, ...newPosts]);
       setPage(currentPage + 1);
-      setHasMore(pagination.hasNextPage);
+      setHasMore(pagination.hasNextPage ?? false);
     } catch (err) {
       if (err.response?.status === 401 && tab === 'feed') {
         setTab('global');

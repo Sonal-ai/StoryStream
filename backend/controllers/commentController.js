@@ -142,7 +142,7 @@ const getComments = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Post not found.' });
     }
 
-    const [comments] = await pool.execute(
+    const [comments] = await pool.query(
       `SELECT c.id, c.content, c.created_at,
               u.id AS author_id, u.username, u.profile_picture
        FROM comments c

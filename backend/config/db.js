@@ -1,31 +1,71 @@
 const mysql = require('mysql2/promise');
+const fs    = require('fs');
+const path  = require('path');
 require('dotenv').config();
 
 /**
- * Creates a MySQL connection pool for efficient connection management.
- * Using pool instead of single connection to handle concurrent requests.
+ * Main connection pool for all API queries.
+ * NOTE: multipleStatements is intentionally OFF here.
+ * execute() uses MySQL's binary prepared-statement protocol;
+ * multipleStatements uses the text protocol — mixing them
+ * causes "Commands out of sync" / 500 errors on LIMIT queries.
  */
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'storystream',
-  port: process.env.DB_PORT || 3306,
+  host:            process.env.DB_HOST,
+  user:            process.env.DB_USER,
+  password:        process.env.DB_PASSWORD,
+  database:        process.env.DB_NAME,
+  port:            Number(process.env.DB_PORT) || 3306,
   waitForConnections: true,
-  connectionLimit: 10,       // Max concurrent connections in pool
-  queueLimit: 0,             // Unlimited queue
-  enableKeepAlive: true,
+  connectionLimit:    10,
+  queueLimit:         0,
+  enableKeepAlive:    true,
   keepAliveInitialDelay: 0,
 });
 
 /**
- * Tests the database connection on startup.
+ * One-time startup routine:
+ *  1. Create the database if it doesn't exist (no DB specified).
+ *  2. Run schema.sql through a SEPARATE connection with multipleStatements
+ *     so CREATE TABLE IF NOT EXISTS scripts work without touching the pool.
+ *  3. Verify the main pool can connect.
  */
 const testConnection = async () => {
   try {
+    // ── Step 1: Ensure the database exists ──────────────────────────────────
+    const rootConn = await mysql.createConnection({
+      host:     process.env.DB_HOST,
+      user:     process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      port:     Number(process.env.DB_PORT) || 3306,
+    });
+    await rootConn.query(
+      `CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
+    );
+    await rootConn.end();
+
+    // ── Step 2: Inject schema.sql via a dedicated multi-statement connection ─
+    const schemaPath = path.join(__dirname, '../database/schema.sql');
+    if (fs.existsSync(schemaPath)) {
+      const schemaConn = await mysql.createConnection({
+        host:               process.env.DB_HOST,
+        user:               process.env.DB_USER,
+        password:           process.env.DB_PASSWORD,
+        database:           process.env.DB_NAME,
+        port:               Number(process.env.DB_PORT) || 3306,
+        multipleStatements: true, // only here — isolated from the main pool
+      });
+      const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+      await schemaConn.query(schemaSql);
+      await schemaConn.end();
+      console.log('✅ Base Database Schema loaded from schema.sql');
+    }
+
+    // ── Step 3: Verify the main pool works ──────────────────────────────────
     const connection = await pool.getConnection();
-    console.log('✅ MySQL connected successfully');
+    console.log('✅ MySQL connected successfully and Database is ready!');
     connection.release();
+
   } catch (error) {
     console.error('❌ MySQL connection failed:', error.message);
     process.exit(1);
