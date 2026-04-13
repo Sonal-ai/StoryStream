@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Sparkles, Zap, Shield, Hash, Bell, Users, MessageCircle,
-  Heart, Search, Moon, ArrowRight, Github, Linkedin, ExternalLink,
-  Play, FileText, ChevronDown, Star, Globe
+  Heart, Search, Moon, ArrowRight, GitFork, Link2,
+  ExternalLink, Play, FileText, ChevronDown, Star, Globe
 } from 'lucide-react';
 
 /* ─── Static data ─────────────────────────────────────── */
