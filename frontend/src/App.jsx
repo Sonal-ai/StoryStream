@@ -9,6 +9,9 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
 import PostDetailPage from './pages/PostDetailPage';
+import SearchPage from './pages/SearchPage';
+import FollowersPage from './pages/FollowersPage';
+import FollowingPage from './pages/FollowingPage';
 
 const AppRoutes = () => {
   const { user } = useAuth();
@@ -26,6 +29,9 @@ const AppRoutes = () => {
         <Route path="/profile/:username" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/notifications"     element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/post/:id"          element={<ProtectedRoute><PostDetailPage /></ProtectedRoute>} />
+        <Route path="/search"                       element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+        <Route path="/profile/:username/followers"   element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
+        <Route path="/profile/:username/following"   element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

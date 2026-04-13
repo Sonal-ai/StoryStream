@@ -965,3 +965,96 @@ button { cursor: pointer; font-family: inherit; }
   .profile-actions { margin: 0 auto; }
   .profile-joined { justify-content: center; }
 }
+
+/* ─── Search Results ─────────────────────────────────────────── */
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.user-search-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-search-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  animation: fadeSlideUp 0.25s ease;
+}
+.user-search-item:hover {
+  border-color: var(--border-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
+}
+
+.user-search-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  text-decoration: none;
+}
+
+.user-search-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+.user-search-item:hover .user-search-avatar { border-color: var(--accent); }
+
+.user-search-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.user-search-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.user-search-bio {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+.user-search-followers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ─── Followers / Following Page ─────────────────────────────── */
+.follow-list-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+  width: fit-content;
+}
+.back-link:hover { color: var(--accent-light); }
+
