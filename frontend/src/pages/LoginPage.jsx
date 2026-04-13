@@ -80,10 +80,6 @@ const LoginPage = () => {
         <p className="auth-switch">
           Don't have an account? <Link to="/register">Register here</Link>
         </p>
-
-        <div className="demo-credentials">
-          <p>Demo: <strong>alice@example.com</strong> / <strong>Password@123</strong></p>
-        </div>
       </div>
     </div>
   );
