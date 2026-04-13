@@ -13,7 +13,7 @@ const getUserProfile = async (req, res, next) => {
     const [rows] = await pool.execute(
       `SELECT 
         u.id, u.username, u.email, u.bio, u.profile_picture,
-        u.date_of_birth, u.location, u.created_at,
+        u.full_name, u.date_of_birth, u.location, u.created_at,
         (SELECT COUNT(*) FROM follows WHERE following_id = u.id) AS followers_count,
         (SELECT COUNT(*) FROM follows WHERE follower_id  = u.id) AS following_count,
         (SELECT COUNT(*) FROM posts    WHERE user_id = u.id AND deleted_at IS NULL) AS posts_count
@@ -54,16 +54,33 @@ const getUserProfile = async (req, res, next) => {
  */
 const updateProfile = async (req, res, next) => {
   try {
-    const { bio, profile_picture, date_of_birth, location } = req.body;
+    const { bio, profile_picture, date_of_birth, location, full_name, username } = req.body;
     const userId = req.user.id;
 
+    // ── Username change: validate uniqueness ──────────────────
+    if (username) {
+      const clean = username.trim().toLowerCase();
+      if (!/^[a-z0-9_]{3,30}$/.test(clean)) {
+        return res.status(400).json({ success: false, message: 'Username must be 3–30 chars: letters, numbers, underscores.' });
+      }
+      const [existing] = await pool.execute(
+        'SELECT id FROM users WHERE username = ? AND id != ?',
+        [clean, userId]
+      );
+      if (existing.length > 0) {
+        return res.status(409).json({ success: false, message: `Username "${clean}" is already taken.` });
+      }
+      await pool.execute('UPDATE users SET username = ? WHERE id = ?', [clean, userId]);
+    }
+
+    // ── Update remaining profile fields ───────────────────────
     await pool.execute(
-      'UPDATE users SET bio = ?, profile_picture = ?, date_of_birth = ?, location = ? WHERE id = ?',
-      [bio || null, profile_picture || null, date_of_birth || null, location || null, userId]
+      'UPDATE users SET bio = ?, profile_picture = ?, date_of_birth = ?, location = ?, full_name = ? WHERE id = ?',
+      [bio || null, profile_picture || null, date_of_birth || null, location || null, full_name || null, userId]
     );
 
     const [updated] = await pool.execute(
-      'SELECT id, username, email, bio, profile_picture, date_of_birth, location, created_at FROM users WHERE id = ?',
+      'SELECT id, username, email, bio, profile_picture, full_name, date_of_birth, location, created_at FROM users WHERE id = ?',
       [userId]
     );
 

@@ -64,6 +64,7 @@ const testConnection = async () => {
       const migrations = [
         "ALTER TABLE users ADD COLUMN date_of_birth DATE DEFAULT NULL",
         "ALTER TABLE users ADD COLUMN location      VARCHAR(100) DEFAULT NULL",
+        "ALTER TABLE users ADD COLUMN full_name     VARCHAR(100) DEFAULT NULL",
       ];
       for (const sql of migrations) {
         try { await schemaConn.query(sql); } catch (e) {

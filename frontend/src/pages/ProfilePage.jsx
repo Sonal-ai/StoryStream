@@ -16,7 +16,7 @@ const ProfilePage = () => {
   const [loading, setLoading]   = useState(true);
   const [editing, setEditing]   = useState(false);
   const [editForm, setEditForm] = useState({
-    bio: '', profile_picture: '', date_of_birth: '', location: ''
+    username: '', full_name: '', bio: '', profile_picture: '', date_of_birth: '', location: ''
   });
   const [saving, setSaving] = useState(false);
 
@@ -35,10 +35,12 @@ const ProfilePage = () => {
       setProfile(p);
       setPosts(postsRes.data.data.posts ?? []);
       setEditForm({
-        bio:            p.bio             || '',
+        username:       p.username         || '',
+        full_name:      p.full_name        || '',
+        bio:            p.bio              || '',
         profile_picture: p.profile_picture || '',
-        date_of_birth:  p.date_of_birth   ? p.date_of_birth.split('T')[0] : '',
-        location:       p.location        || '',
+        date_of_birth:  p.date_of_birth ? p.date_of_birth.split('T')[0] : '',
+        location:       p.location         || '',
       });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to load profile');
@@ -56,6 +58,10 @@ const ProfilePage = () => {
       if (isOwner) updateUser(updated);
       setEditing(false);
       toast.success('Profile updated!');
+      // Redirect if username changed
+      if (updated.username && updated.username !== username) {
+        navigate(`/profile/${updated.username}`, { replace: true });
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Update failed');
     } finally {
@@ -105,6 +111,22 @@ const ProfilePage = () => {
 
               {editing ? (
                 <div className="edit-form">
+                  <div className="edit-field-group">
+                    <label>Username <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="your_username"
+                      value={editForm.username}
+                      onChange={field('username')}
+                      maxLength={30}
+                      pattern="[a-z0-9_]+"
+                    />
+                    <span className="field-hint">3–30 chars · letters, numbers, underscores · must be unique</span>
+                  </div>
+                  <div className="edit-field-group">
+                    <label>Full Name <span className="optional">(optional)</span></label>
+                    <input type="text" placeholder="e.g. Sonal Singh" value={editForm.full_name} onChange={field('full_name')} maxLength={100} />
+                  </div>
                   <div className="edit-field-group">
                     <label>Bio</label>
                     <textarea

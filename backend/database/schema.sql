@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   password        VARCHAR(255)  NOT NULL,
   bio             TEXT,
   profile_picture VARCHAR(500)  DEFAULT NULL,
+  full_name       VARCHAR(100)  DEFAULT NULL,
   date_of_birth   DATE          DEFAULT NULL,
   location        VARCHAR(100)  DEFAULT NULL,
   is_active       TINYINT(1)    NOT NULL DEFAULT 1,
