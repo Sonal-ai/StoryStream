@@ -2,70 +2,66 @@ import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Sparkles, Zap, Shield, Hash, Bell, Users, MessageCircle,
-  GitHub, LinkedIn, Heart, Search, Moon, ArrowRight, Play, FileText, ChevronDown, Star, Globe
+Sparkles, Zap, Shield, Hash, Bell, Users, MessageCircle,
+GitHub, LinkedIn, Heart, Search, Moon, ArrowRight, Play, FileText, ChevronDown, Star, Globe
 } from 'lucide-react';
 
 /* ─── Static data ─────────────────────────────────────── */
 const FEATURES = [
-  { icon: Zap,           title: 'Real‑time Feed',       desc: 'Personalized "For You" feed powered by who you follow with infinite scroll.' },
-  { icon: Hash,          title: 'Smart Hashtags',        desc: 'Clickable hashtag pages aggregate posts instantly. Discover trending topics.' },
-  { icon: Heart,         title: 'Animated Likes',        desc: 'Heart pop animation + floating particles when you like a post.' },
-  { icon: MessageCircle, title: 'Inline Comments',       desc: 'Comments expand right inside the post card — no page redirect.' },
-  { icon: Users,         title: 'Follow System',         desc: 'Follow users, get Follow‑Back suggestions, full follower/following lists.' },
-  { icon: Bell,          title: 'Notifications',         desc: 'Real‑time in-app alerts for likes, comments and new followers.' },
-  { icon: Search,        title: 'User Search',           desc: 'Search any user by username or bio. Instant results page.' },
-  { icon: Moon,          title: 'Dark / Light Mode',     desc: 'Animated moon‑night / sun‑cloud toggle with warm reading palette.' },
-  { icon: Shield,        title: 'Production Security',   desc: 'JWT auth, bcrypt, parameterized SQL, rate limiting & Helmet headers.' },
+{ icon: Zap, title: 'Real-time Feed', desc: 'Personalized "For You" feed powered by who you follow with infinite scroll.' },
+{ icon: Hash, title: 'Smart Hashtags', desc: 'Clickable hashtag pages aggregate posts instantly. Discover trending topics.' },
+{ icon: Heart, title: 'Animated Likes', desc: 'Heart pop animation + floating particles when you like a post.' },
+{ icon: MessageCircle, title: 'Inline Comments', desc: 'Comments expand right inside the post card — no page redirect.' },
+{ icon: Users, title: 'Follow System', desc: 'Follow users, get Follow-Back suggestions, full follower/following lists.' },
+{ icon: Bell, title: 'Notifications', desc: 'Real-time in-app alerts for likes, comments and new followers.' },
+{ icon: Search, title: 'User Search', desc: 'Search any user by username or bio. Instant results page.' },
+{ icon: Moon, title: 'Dark / Light Mode', desc: 'Animated moon-night / sun-cloud toggle with warm reading palette.' },
+{ icon: Shield, title: 'Production Security', desc: 'JWT auth, bcrypt, parameterized SQL, rate limiting & Helmet headers.' },
 ];
 
 const TEAM = [
-  {
-    name: 'Sonal',
-    role: 'Full‑Stack Developer',
-    desc: 'Backend architecture, MySQL schema design, REST API, authentication.',
-    seed: 'sonal2024',
-    github: '#', linkedin: '#',
-  },
-  {
-    name: 'Contributor 2',
-    role: 'Frontend Developer',
-    desc: 'React components, design system, animations, responsive UI.',
-    seed: 'dev2024b',
-    github: '#', linkedin: '#',
-  },
+{
+name: 'Sonal',
+role: 'Full-Stack Developer',
+desc: 'Backend architecture, MySQL schema design, REST API, authentication.',
+seed: 'sonal2024',
+github: '#', linkedin: '#',
+},
+{
+name: 'Contributor 2',
+role: 'Frontend Developer',
+desc: 'React components, design system, animations, responsive UI.',
+seed: 'dev2024b',
+github: '#', linkedin: '#',
+},
 ];
 
 const TECH_STACK = [
-  { label: 'React 18',    color: '#61dafb' },
-  { label: 'Vite',        color: '#b060f8' },
-  { label: 'Node.js',     color: '#a6e3a1' },
-  { label: 'Express',     color: '#9998b0' },
-  { label: 'MySQL 8',     color: '#67c6e3' },
-  { label: 'mysql2',      color: '#f38ba8' },
-  { label: 'JWT',         color: '#f9e2af' },
+{ label: 'React 18', color: '#61dafb' },
+{ label: 'Vite', color: '#b060f8' },
+{ label: 'Node.js', color: '#a6e3a1' },
+{ label: 'Express', color: '#9998b0' },
+{ label: 'MySQL 8', color: '#67c6e3' },
+{ label: 'mysql2', color: '#f38ba8' },
+{ label: 'JWT', color: '#f9e2af' },
 ];
 
-/* ─── Component ───────────────────────────────────────── */
 const LandingPage = () => {
-  const { user }   = useAuth();
-  const navigate   = useNavigate();
-  const videoRef   = useRef(null);
+const { user } = useAuth();
+const navigate = useNavigate();
+const videoRef = useRef(null);
 
-  // Auto-navigate logged-in users to feed after 0ms (instant)
-  // But still show the landing page if they want to view it
-  const handleGetStarted = () => navigate(user ? '/feed' : '/register');
+const handleGetStarted = () => navigate(user ? '/feed' : '/register');
 
-  // Intersection observer for scroll reveals
-  useEffect(() => {
-    const els = document.querySelectorAll('.lp-reveal');
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('revealed'); }),
-      { threshold: 0.12 }
-    );
-    els.forEach(el => io.observe(el));
-    return () => io.disconnect();
-  }, []);
+useEffect(() => {
+const els = document.querySelectorAll('.lp-reveal');
+const io = new IntersectionObserver(
+(entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('revealed'); }),
+{ threshold: 0.12 }
+);
+els.forEach(el => io.observe(el));
+return () => io.disconnect();
+}, []);
 
   return (
     <div className="lp-root">
