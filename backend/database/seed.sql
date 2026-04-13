@@ -29,7 +29,7 @@ INSERT IGNORE INTO posts (user_id, content, image_url) VALUES
 (4, 'Neural networks are just fancy function approximators. Change my mind. #machinelearning #ai', NULL),
 (4, 'Just finished optimizing a JOIN query that was taking 3 seconds down to 50ms with proper indexes. #sql #optimization', NULL),
 (5, 'Terraform state files are sacred. Never touch them manually. #devops #terraform', NULL),
-(5, 'Learning #golang this weekend. Coming from Node.js, the concurrency model is mind-blowing.');
+(5, 'Learning #golang this weekend. Coming from Node.js, the concurrency model is mind-blowing.', NULL);
 
 -- ============================================================
 -- Seed: follows

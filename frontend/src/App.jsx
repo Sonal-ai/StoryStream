@@ -12,6 +12,7 @@ import PostDetailPage from './pages/PostDetailPage';
 import SearchPage from './pages/SearchPage';
 import FollowersPage from './pages/FollowersPage';
 import FollowingPage from './pages/FollowingPage';
+import HashtagPage from './pages/HashtagPage';
 
 const AppRoutes = () => {
   const { user } = useAuth();
@@ -32,6 +33,7 @@ const AppRoutes = () => {
         <Route path="/search"                       element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
         <Route path="/profile/:username/followers"   element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
         <Route path="/profile/:username/following"   element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
+        <Route path="/hashtag/:tag"                  element={<ProtectedRoute><HashtagPage /></ProtectedRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

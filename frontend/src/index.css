@@ -535,6 +535,47 @@ button { cursor: pointer; font-family: inherit; }
 }
 .post-delete-btn:hover { color: var(--danger); background: rgba(243,139,168,0.1); }
 
+/* Inline delete confirmation row */
+.delete-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: fadeSlideUp 0.15s ease;
+}
+.delete-confirm-label {
+  font-size: 13px;
+  color: var(--danger);
+  font-weight: 500;
+}
+.confirm-yes-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.confirm-yes-btn:hover { opacity: 0.85; }
+.confirm-no-btn {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  transition: all 0.2s;
+}
+.confirm-no-btn:hover { color: var(--text-primary); }
+
+.comment-btn.active { color: var(--accent-light); border-color: rgba(124,111,205,0.35); }
+
 .post-content {
   font-size: 15px;
   line-height: 1.65;

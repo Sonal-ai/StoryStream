@@ -1,21 +1,21 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, X, Check } from 'lucide-react';
 import { likePost, unlikePost, deletePost } from '../api';
 import { useAuth } from '../context/AuthContext';
+import CommentSection from './CommentSection';
 import toast from 'react-hot-toast';
 
 /**
- * Renders a single post card with like, comment count, hashtags, and delete.
- * @param {Object}   post       - Post data
- * @param {Function} onDelete   - Callback when post is deleted
- * @param {Function} onLikeToggle - Callback to update parent state
+ * Renders a single post card with like, inline comments, hashtags, and delete.
  */
 const PostCard = ({ post, onDelete, onLikeToggle }) => {
-  const { user }         = useAuth();
-  const [likeCount, setLikeCount] = useState(Number(post.like_count) || 0);
-  const [liked, setLiked]         = useState(Boolean(post.liked_by_me));
-  const [loading, setLoading]     = useState(false);
+  const { user }          = useAuth();
+  const [likeCount, setLikeCount]     = useState(Number(post.like_count) || 0);
+  const [liked, setLiked]             = useState(Boolean(post.liked_by_me));
+  const [loading, setLoading]         = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleLike = async () => {
     if (!user) return toast.error('Login to like posts');
@@ -39,7 +39,6 @@ const PostCard = ({ post, onDelete, onLikeToggle }) => {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Delete this post?')) return;
     try {
       await deletePost(post.id);
       toast.success('Post deleted');
@@ -73,10 +72,24 @@ const PostCard = ({ post, onDelete, onLikeToggle }) => {
             <span className="post-time">{timeAgo(post.created_at)}</span>
           </div>
         </Link>
+
+        {/* Delete — shows inline confirm row */}
         {user?.id === post.author_id && (
-          <button className="post-delete-btn" onClick={handleDelete} title="Delete post">
-            <Trash2 size={15} />
-          </button>
+          confirmDelete ? (
+            <div className="delete-confirm-row">
+              <span className="delete-confirm-label">Delete post?</span>
+              <button className="confirm-yes-btn" onClick={handleDelete} title="Yes, delete">
+                <Check size={14} /> Yes
+              </button>
+              <button className="confirm-no-btn" onClick={() => setConfirmDelete(false)} title="Cancel">
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <button className="post-delete-btn" onClick={() => setConfirmDelete(true)} title="Delete post">
+              <Trash2 size={15} />
+            </button>
+          )
         )}
       </div>
 
@@ -88,7 +101,7 @@ const PostCard = ({ post, onDelete, onLikeToggle }) => {
         <img src={post.image_url} alt="Post attachment" className="post-image" />
       )}
 
-      {/* Hashtags */}
+      {/* Hashtags — link to /hashtag/:tag */}
       {post.hashtags?.length > 0 && (
         <div className="post-hashtags">
           {post.hashtags.map((tag) => (
@@ -110,11 +123,18 @@ const PostCard = ({ post, onDelete, onLikeToggle }) => {
           <span>{likeCount}</span>
         </button>
 
-        <Link to={`/post/${post.id}`} className="action-btn comment-btn">
+        {/* Toggle comments inline */}
+        <button
+          className={`action-btn comment-btn ${showComments ? 'active' : ''}`}
+          onClick={() => setShowComments((v) => !v)}
+        >
           <MessageCircle size={17} />
           <span>{post.comment_count}</span>
-        </Link>
+        </button>
       </div>
+
+      {/* Inline comment section */}
+      {showComments && <CommentSection postId={post.id} />}
     </article>
   );
 };
