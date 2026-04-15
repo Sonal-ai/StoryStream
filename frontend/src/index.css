@@ -195,7 +195,7 @@ button { cursor: pointer; font-family: inherit; }
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   text-decoration: none;
 }
 .nav-icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
@@ -264,7 +264,7 @@ button { cursor: pointer; font-family: inherit; }
   font-weight: 500;
   padding: 6px 14px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   margin-bottom: 20px;
 }
 .auth-back-btn:hover {
@@ -358,7 +358,7 @@ button { cursor: pointer; font-family: inherit; }
   padding: 11px 20px;
   font-size: 14px;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   text-decoration: none;
 }
 .btn-primary:hover:not(:disabled) {
@@ -380,7 +380,7 @@ button { cursor: pointer; font-family: inherit; }
   padding: 10px 18px;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 .btn-secondary:hover { border-color: var(--accent); color: var(--accent-light); }
 .btn-secondary.small { padding: 7px 14px; font-size: 13px; }
@@ -408,7 +408,7 @@ button { cursor: pointer; font-family: inherit; }
   font-weight: 500;
   padding: 9px 16px;
   border-radius: var(--radius-sm);
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 .tab-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
 .tab-btn.active {
@@ -493,7 +493,7 @@ button { cursor: pointer; font-family: inherit; }
   display: flex;
   padding: 6px;
   border-radius: 50%;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 .icon-action-btn:hover { color: var(--accent-light); background: var(--accent-glow); }
 
@@ -515,7 +515,7 @@ button { cursor: pointer; font-family: inherit; }
   padding: 9px 22px;
   font-size: 14px;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 .submit-post-btn:hover:not(:disabled) {
   background: var(--accent-light);
@@ -579,7 +579,7 @@ button { cursor: pointer; font-family: inherit; }
   color: var(--text-muted);
   padding: 6px;
   border-radius: 50%;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   display: flex;
 }
 .post-delete-btn:hover { color: var(--danger); background: rgba(243,139,168,0.1); }
@@ -619,7 +619,7 @@ button { cursor: pointer; font-family: inherit; }
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 .confirm-no-btn:hover { color: var(--text-primary); }
 
@@ -650,7 +650,7 @@ button { cursor: pointer; font-family: inherit; }
   padding: 3px 12px;
   font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   text-decoration: none;
 }
 .hashtag-chip:hover {
@@ -780,7 +780,7 @@ button { cursor: pointer; font-family: inherit; }
   padding: 10px 14px;
   border-radius: 50%;
   display: flex;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 .comment-form button:hover:not(:disabled) { background: var(--accent-light); }
 .comment-form button:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -801,7 +801,7 @@ button { cursor: pointer; font-family: inherit; }
   font-size: 14px;
   font-weight: 600;
   border: none;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 .follow-btn.follow {
   background: var(--accent);
@@ -973,7 +973,7 @@ button { cursor: pointer; font-family: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   position: relative;
   animation: fadeSlideUp 0.25s ease;
 }
@@ -1017,7 +1017,7 @@ button { cursor: pointer; font-family: inherit; }
   color: var(--text-secondary);
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   align-self: flex-start;
 }
 .back-btn:hover { border-color: var(--accent); color: var(--accent-light); }
@@ -1059,7 +1059,7 @@ button { cursor: pointer; font-family: inherit; }
   padding: 11px 32px;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   margin: 0 auto;
   display: block;
 }
@@ -1382,7 +1382,7 @@ body, .navbar, .post-card, .profile-card, .auth-card,
   font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
 }
 .modal-cancel-btn:hover { border-color: var(--accent); color: var(--text-primary); }
@@ -1394,7 +1394,7 @@ body, .navbar, .post-card, .profile-card, .auth-card,
   font-size: 14px;
   font-weight: 600;
   color: #fff;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
 }
 .modal-confirm-btn.danger {
@@ -1562,7 +1562,7 @@ body, .navbar, .post-card, .profile-card, .auth-card,
 /* BUTTONS */
 .lp-btn-primary { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#7c6fcd,#9b91e3); color:#fff; border:none; border-radius:99px; padding:10px 22px; font-size:14px; font-weight:600; cursor:pointer; text-decoration:none; transition:transform .2s, box-shadow .2s; box-shadow:0 4px 20px rgba(124,111,205,.35); }
 .lp-btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(124,111,205,.5); }
-.lp-btn-ghost { display:inline-flex; align-items:center; gap:6px; background:transparent; color:#9998b0; border:1px solid rgba(255,255,255,.12); border-radius:99px; padding:10px 22px; font-size:14px; font-weight:500; cursor:pointer; text-decoration:none; transition:all .2s; }
+.lp-btn-ghost { display:inline-flex; align-items:center; gap:6px; background:transparent; color:#9998b0; border:1px solid rgba(255,255,255,.12); border-radius:99px; padding:10px 22px; font-size:14px; font-weight:500; cursor:pointer; text-decoration:none; transition:color .2s, background-color .2s, border-color .2s; }
 .lp-btn-ghost:hover { color:#e8e8f0; border-color:rgba(255,255,255,.28); }
 .lp-btn-lg { padding:13px 28px; font-size:15px; }
 .lp-btn-xl { padding:16px 36px; font-size:17px; }
@@ -1642,7 +1642,7 @@ body, .navbar, .post-card, .profile-card, .auth-card,
 .lp-team-role { font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#9b91e3; display:block; margin-bottom:12px; }
 .lp-team-desc { font-size:13px; color:#9998b0; line-height:1.65; margin-bottom:20px; }
 .lp-team-links { display:flex; gap:10px; justify-content:center; }
-.lp-team-link { width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.05); border:1px solid #252538; display:flex; align-items:center; justify-content:center; color:#9998b0; text-decoration:none; transition:all .2s; }
+.lp-team-link { width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.05); border:1px solid #252538; display:flex; align-items:center; justify-content:center; color:#9998b0; text-decoration:none; transition:color .2s, background-color .2s, border-color .2s; }
 .lp-team-link:hover { background:rgba(124,111,205,.15); color:#9b91e3; border-color:rgba(124,111,205,.4); }
 
 /* REPORT / PDF */
