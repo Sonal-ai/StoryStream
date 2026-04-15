@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
 import {
-Sparkles, Zap, Shield, Hash, Bell, Users, MessageCircle,
-Heart, Search, Moon, ArrowRight, Play, FileText, ChevronDown, Star
+Sparkles, Zap, Shield, Hash, Bell, Users, Database,
+Heart, MessageCircle, ArrowRight, FileText, ChevronDown, Star, GitBranch
 } from 'lucide-react';
 
 /* ─── Brand SVG icons (not in lucide-react) ───────────── */
@@ -22,15 +22,11 @@ const Linkedin = ({ size = 16, ...props }) => (
 
 /* ─── Static data ─────────────────────────────────────── */
 const FEATURES = [
-{ icon: Zap, title: 'Real-time Feed', desc: 'Personalized "For You" feed powered by who you follow with infinite scroll.' },
-{ icon: Hash, title: 'Smart Hashtags', desc: 'Clickable hashtag pages aggregate posts instantly. Discover trending topics.' },
-{ icon: Heart, title: 'Animated Likes', desc: 'Heart pop animation + floating particles when you like a post.' },
-{ icon: MessageCircle, title: 'Inline Comments', desc: 'Comments expand right inside the post card — no page redirect.' },
-{ icon: Users, title: 'Follow System', desc: 'Follow users, get Follow-Back suggestions, full follower/following lists.' },
-{ icon: Bell, title: 'Notifications', desc: 'Real-time in-app alerts for likes, comments and new followers.' },
-{ icon: Search, title: 'User Search', desc: 'Search any user by username or bio. Instant results page.' },
-{ icon: Moon, title: 'Dark / Light Mode', desc: 'Animated moon-night / sun-cloud toggle with warm reading palette.' },
-{ icon: Shield, title: 'Production Security', desc: 'JWT auth, bcrypt, parameterized SQL, rate limiting & Helmet headers.' },
+{ icon: Database, title: 'Normalized Schema (3NF)', desc: 'Nine InnoDB tables normalized to BCNF with foreign keys, composite keys, and ON DELETE CASCADE referential integrity.' },
+{ icon: Zap, title: 'Transactions & ACID', desc: 'All multi-table writes wrapped in BEGIN/COMMIT/ROLLBACK with SELECT … FOR UPDATE pessimistic locking.' },
+{ icon: Shield, title: 'Triggers & Assertions', desc: 'Six SQL triggers for auto audit-logging and cleanup, plus nine CHECK constraints enforcing business rules at DB level.' },
+{ icon: GitBranch, title: 'Concurrency Control', desc: 'Connection pooling, row-level locking, and REPEATABLE READ isolation prevent lost updates and dirty reads.' },
+{ icon: Hash, title: 'Advanced SQL Queries', desc: 'Correlated subqueries, multi-table JOINs, EXISTS, INSERT IGNORE, soft deletes, and cursor-based pagination.' },
 ];
 
 const TEAM = [
@@ -65,7 +61,6 @@ const TECH_STACK = [
 const LandingPage = () => {
 const { user } = useAuth();
 const navigate = useNavigate();
-const videoRef = useRef(null);
 
 const handleGetStarted = () => navigate(user ? '/feed' : '/register');
 
@@ -88,9 +83,8 @@ return () => io.disconnect();
           <div className="lp-logo"><Sparkles size={20} /> StoryStream</div>
           <div className="lp-nav-links">
             <a href="#features">Features</a>
-            <a href="#demo">Demo</a>
-            <a href="#team">Team</a>
             <a href="#report">Report</a>
+            <a href="#team">Team</a>
           </div>
           <div className="lp-nav-cta">
             <ThemeToggle />
@@ -126,8 +120,8 @@ return () => io.disconnect();
             <button className="lp-btn-primary lp-btn-lg" onClick={handleGetStarted}>
               {user ? 'Go to Feed' : 'Get Started — it\'s free'} <ArrowRight size={16} />
             </button>
-            <a href="#demo" className="lp-btn-ghost lp-btn-lg">
-              <Play size={16} /> Watch Demo
+            <a href="#features" className="lp-btn-ghost lp-btn-lg">
+              Explore Features
             </a>
           </div>
           <div className="lp-hero-meta">
@@ -177,80 +171,15 @@ return () => io.disconnect();
       {/* ── FEATURES ────────────────────────────────────── */}
       <section id="features" className="lp-section">
         <div className="lp-section-inner">
-          <div className="lp-section-label lp-reveal">Everything you need</div>
-          <h2 className="lp-section-title lp-reveal">Packed with powerful features</h2>
-          <p className="lp-section-sub lp-reveal">Built to production standards with clean, modular architecture.</p>
+          <div className="lp-section-label lp-reveal">Database-Driven Architecture</div>
+          <h2 className="lp-section-title lp-reveal">Built on solid DBMS foundations</h2>
+          <p className="lp-section-sub lp-reveal">Every feature is backed by normalized SQL, transactions, triggers, and concurrency control.</p>
           <div className="lp-features-grid">
             {FEATURES.map((f, i) => (
               <div key={f.title} className="lp-feature-card lp-reveal" style={{ animationDelay: `${i * 0.05}s` }}>
                 <div className="lp-feature-icon"><f.icon size={22} /></div>
                 <h3 className="lp-feature-title">{f.title}</h3>
                 <p className="lp-feature-desc">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── DEMO VIDEO ──────────────────────────────────── */}
-      <section id="demo" className="lp-section lp-section-dark">
-        <div className="lp-section-inner">
-          <div className="lp-section-label lp-reveal">See it in action</div>
-          <h2 className="lp-section-title lp-reveal">Live Demo &amp; Walkthrough</h2>
-          <p className="lp-section-sub lp-reveal">Watch a full walkthrough of the application features and user flows.</p>
-
-          <div className="lp-video-wrapper lp-reveal">
-            <div className="lp-video-container">
-              {/* Replace src with your actual video URL */}
-              <video
-                ref={videoRef}
-                className="lp-video"
-                controls
-                poster=""
-                preload="metadata"
-              >
-                {/* Swap this src with your demo video path, e.g. /demo.mp4 */}
-                <source src="/demo.mp4" type="video/mp4" />
-                <p className="lp-video-fallback">
-                  Your browser doesn't support video.
-                  <a href="/demo.mp4" download>Download the demo</a>
-                </p>
-              </video>
-              <div className="lp-video-placeholder">
-                <div className="lp-play-ring">
-                  <Play size={32} fill="currentColor" />
-                </div>
-                <p>Demo video coming soon</p>
-                <span>Place your demo video at <code>public/demo.mp4</code></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── TEAM ────────────────────────────────────────── */}
-      <section id="team" className="lp-section">
-        <div className="lp-section-inner">
-          <div className="lp-section-label lp-reveal">The builders</div>
-          <h2 className="lp-section-title lp-reveal">Meet the Developer{TEAM.length > 1 ? 's' : ''}</h2>
-          <p className="lp-section-sub lp-reveal">Crafted with ❤️ as a full‑stack capstone project.</p>
-          <div className="lp-team-grid">
-            {TEAM.map((member, i) => (
-              <div key={member.name} className="lp-team-card lp-reveal" style={{ animationDelay: `${i * 0.1}s` }}>
-                <div className="lp-team-avatar-ring">
-                  <img
-                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.seed}`}
-                    alt={member.name}
-                    className="lp-team-avatar"
-                  />
-                </div>
-                <h3 className="lp-team-name">{member.name}</h3>
-                <span className="lp-team-role">{member.role}</span>
-                <p className="lp-team-desc">{member.desc}</p>
-                <div className="lp-team-links">
-                  <a href={member.github}   className="lp-team-link" title="GitHub"   target="_blank" rel="noreferrer"><Github   size={16} /></a>
-                  <a href={member.linkedin} className="lp-team-link" title="LinkedIn" target="_blank" rel="noreferrer"><Linkedin size={16} /></a>
-                </div>
               </div>
             ))}
           </div>
@@ -285,19 +214,29 @@ return () => io.disconnect();
         </div>
       </section>
 
-      {/* ── STATS ───────────────────────────────────────── */}
-      <section className="lp-section">
+      {/* ── TEAM ────────────────────────────────────────── */}
+      <section id="team" className="lp-section">
         <div className="lp-section-inner">
-          <div className="lp-stats-grid">
-            {[
-              { num: '9+',  label: 'API Endpoints' },
-              { num: '3NF', label: 'DB Normalization' },
-              { num: '100%', label: 'Raw SQL — No ORM' },
-              { num: '∞',    label: 'Scalability' },
-            ].map(s => (
-              <div key={s.label} className="lp-stat-item lp-reveal">
-                <div className="lp-stat-num">{s.num}</div>
-                <div className="lp-stat-label">{s.label}</div>
+          <div className="lp-section-label lp-reveal">The builders</div>
+          <h2 className="lp-section-title lp-reveal">Meet the Developer{TEAM.length > 1 ? 's' : ''}</h2>
+          <p className="lp-section-sub lp-reveal">Crafted with ❤️ as a full‑stack capstone project.</p>
+          <div className="lp-team-grid">
+            {TEAM.map((member, i) => (
+              <div key={member.name} className="lp-team-card lp-reveal" style={{ animationDelay: `${i * 0.1}s` }}>
+                <div className="lp-team-avatar-ring">
+                  <img
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.seed}`}
+                    alt={member.name}
+                    className="lp-team-avatar"
+                  />
+                </div>
+                <h3 className="lp-team-name">{member.name}</h3>
+                <span className="lp-team-role">{member.role}</span>
+                <p className="lp-team-desc">{member.desc}</p>
+                <div className="lp-team-links">
+                  <a href={member.github}   className="lp-team-link" title="GitHub"   target="_blank" rel="noreferrer"><Github   size={16} /></a>
+                  <a href={member.linkedin} className="lp-team-link" title="LinkedIn" target="_blank" rel="noreferrer"><Linkedin size={16} /></a>
+                </div>
               </div>
             ))}
           </div>
