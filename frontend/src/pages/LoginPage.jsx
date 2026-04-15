@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, Eye, EyeOff } from 'lucide-react';
+import { Sparkles, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const LoginPage = () => {
@@ -34,6 +34,11 @@ const LoginPage = () => {
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <button className="auth-back-btn" onClick={() => navigate('/')} title="Back to home">
+          <ArrowLeft size={18} />
+          <span>Back</span>
+        </button>
+
         <div className="auth-brand">
           <Sparkles size={32} />
           <h1>StoryStream</h1>
