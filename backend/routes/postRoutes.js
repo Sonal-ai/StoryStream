@@ -5,18 +5,18 @@ const {
 } = require('../controllers/postController');
 const { addComment, deleteComment, getComments } = require('../controllers/commentController');
 const { likePost, unlikePost, getPostLikes }     = require('../controllers/likeController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, optionalProtect } = require('../middleware/authMiddleware');
 
 // Feed routes
 router.get('/feed',    protect, getFeed);       // Personalized feed (JWT required)
-router.get('/',                 getAllPosts);    // Global feed (public)
+router.get('/',      optionalProtect, getAllPosts);    // Global feed (public, optional auth for liked_by_me)
 
 // Hashtag route (before /:id to avoid conflict)
-router.get('/hashtag/:tag', getPostsByHashtag);
+router.get('/hashtag/:tag', optionalProtect, getPostsByHashtag);
 
 // CRUD
 router.post('/',     protect, createPost);
-router.get('/:id',           getPostById);
+router.get('/:id',   optionalProtect, getPostById);   // Public, optional auth for liked_by_me
 router.delete('/:id', protect, deletePost);
 
 // Comments on a post

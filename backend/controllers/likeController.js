@@ -12,29 +12,31 @@ const likePost = async (req, res, next) => {
     const postId = parseInt(req.params.postId);
     const userId = req.user.id;
 
-    // Verify post exists
+    await connection.beginTransaction();
+
+    // Verify post exists — FOR UPDATE locks the row to prevent concurrent modifications
     const [postRows] = await connection.execute(
-      'SELECT id, user_id FROM posts WHERE id = ? AND deleted_at IS NULL',
+      'SELECT id, user_id FROM posts WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
       [postId]
     );
 
     if (postRows.length === 0) {
+      await connection.rollback();
       connection.release();
       return res.status(404).json({ success: false, message: 'Post not found.' });
     }
 
-    // Check if already liked
+    // Check if already liked — FOR UPDATE prevents duplicate-like race condition
     const [existingLike] = await connection.execute(
-      'SELECT id FROM likes WHERE user_id = ? AND post_id = ?',
+      'SELECT id FROM likes WHERE user_id = ? AND post_id = ? FOR UPDATE',
       [userId, postId]
     );
 
     if (existingLike.length > 0) {
+      await connection.rollback();
       connection.release();
       return res.status(409).json({ success: false, message: 'You already liked this post.' });
     }
-
-    await connection.beginTransaction();
 
     // Insert like — UNIQUE constraint (user_id, post_id) prevents duplicates at DB level
     await connection.execute(

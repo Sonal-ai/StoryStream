@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 import {
 Sparkles, Zap, Shield, Hash, Bell, Users, MessageCircle,
 Heart, Search, Moon, ArrowRight, Play, FileText, ChevronDown, Star
@@ -92,8 +93,10 @@ return () => io.disconnect();
             <a href="#report">Report</a>
           </div>
           <div className="lp-nav-cta">
+            <ThemeToggle />
+            <Link to="/feed" className="lp-btn-ghost" style={{ marginLeft: '12px' }}>Explore Feed</Link>
             {user
-              ? <Link to="/feed" className="lp-btn-primary">Go to Feed <ArrowRight size={15} /></Link>
+              ? <Link to="/feed" className="lp-btn-primary">Back to App <ArrowRight size={15} /></Link>
               : <>
                   <Link to="/login"    className="lp-btn-ghost">Login</Link>
                   <Link to="/register" className="lp-btn-primary">Get Started <ArrowRight size={15} /></Link>

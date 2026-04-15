@@ -38,7 +38,7 @@ const PostCard = ({ post, onDelete, onLikeToggle }) => {
         setLikeCount(res.data.data.like_count);
         // Trigger animations
         setHeartAnim(true);
-        setTimeout(() => setHeartAnim(false), 400);
+        setTimeout(() => setHeartAnim(false), 500); // 500ms matches the CSS animation duration
         spawnFloatingHeart();
       }
       onLikeToggle?.();

@@ -46,24 +46,30 @@ const Navbar = () => {
 
         {/* Nav actions */}
         <div className="navbar-actions">
-          <Link to="/"              className="nav-icon-btn" title="Home"><Home size={20} /></Link>
-          <Link to="/notifications" className="nav-icon-btn" title="Notifications"><Bell size={20} /></Link>
+          <Link to="/feed"          className="nav-icon-btn" title="Feed"><Home size={20} /></Link>
+          {user && (
+             <Link to="/notifications" className="nav-icon-btn" title="Notifications"><Bell size={20} /></Link>
+          )}
 
           {/* Animated Theme toggle */}
           <ThemeToggle />
 
-          {user && (
-            <Link to={`/profile/${user.username}`} className="nav-icon-btn" title="Profile">
-              <img
-                src={user.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`}
-                alt={user.username}
-                className="nav-avatar"
-              />
-            </Link>
+          {user ? (
+            <>
+              <Link to={`/profile/${user.username}`} className="nav-icon-btn" title="Profile">
+                <img
+                  src={user.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`}
+                  alt={user.username}
+                  className="nav-avatar"
+                />
+              </Link>
+              <button className="nav-icon-btn danger" onClick={handleLogout} title="Logout">
+                <LogOut size={20} />
+              </button>
+            </>
+          ) : (
+            <Link to="/login" className="nav-btn-outline" style={{ fontSize: '13px', padding: '6px 12px', border: '1px solid var(--border)', borderRadius: '6px', marginLeft: '8px' }}>Log in</Link>
           )}
-          <button className="nav-icon-btn danger" onClick={handleLogout} title="Logout">
-            <LogOut size={20} />
-          </button>
         </div>
       </div>
     </nav>

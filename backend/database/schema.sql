@@ -24,6 +24,11 @@ CREATE TABLE IF NOT EXISTS users (
   created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
+  -- Assertions (CHECK constraints)
+  CONSTRAINT chk_username_min_len  CHECK (CHAR_LENGTH(username) >= 3),
+  CONSTRAINT chk_email_format      CHECK (email LIKE '%_@__%.__%'),
+  CONSTRAINT chk_password_hash_len CHECK (CHAR_LENGTH(password) >= 8),
+
   INDEX idx_users_username (username),
   INDEX idx_users_email    (email),
   INDEX idx_users_created_at (created_at)
@@ -45,6 +50,10 @@ CREATE TABLE IF NOT EXISTS posts (
 
   CONSTRAINT fk_posts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
 
+  -- Assertions (CHECK constraints)
+  CONSTRAINT chk_post_content_not_empty CHECK (CHAR_LENGTH(TRIM(content)) > 0),
+  CONSTRAINT chk_post_content_max_len   CHECK (CHAR_LENGTH(content) <= 280),
+
   INDEX idx_posts_user_id    (user_id),
   INDEX idx_posts_created_at (created_at),
   INDEX idx_posts_deleted_at (deleted_at)              -- used in WHERE deleted_at IS NULL
@@ -65,6 +74,10 @@ CREATE TABLE IF NOT EXISTS comments (
 
   CONSTRAINT fk_comments_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
   CONSTRAINT fk_comments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+
+  -- Assertions (CHECK constraints)
+  CONSTRAINT chk_comment_content_not_empty CHECK (CHAR_LENGTH(TRIM(content)) > 0),
+  CONSTRAINT chk_comment_content_max_len   CHECK (CHAR_LENGTH(content) <= 500),
 
   INDEX idx_comments_post_id    (post_id),
   INDEX idx_comments_user_id    (user_id),
@@ -108,6 +121,9 @@ CREATE TABLE IF NOT EXISTS follows (
 
   CONSTRAINT fk_follows_follower  FOREIGN KEY (follower_id)  REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_follows_following FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE,
+
+  -- Assertion: prevent self-follow at DB level
+  CONSTRAINT chk_no_self_follow CHECK (follower_id <> following_id),
 
   -- A user can follow another user only once
   UNIQUE KEY uq_follows_pair (follower_id, following_id),
@@ -166,6 +182,9 @@ CREATE TABLE IF NOT EXISTS notifications (
 
   CONSTRAINT fk_notif_user  FOREIGN KEY (user_id)  REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_notif_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE,
+
+  -- Assertion: no self-notifications
+  CONSTRAINT chk_no_self_notification CHECK (user_id <> actor_id),
 
   INDEX idx_notif_user_id    (user_id),
   INDEX idx_notif_is_read    (is_read),

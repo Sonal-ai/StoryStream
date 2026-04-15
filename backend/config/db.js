@@ -84,6 +84,57 @@ const testConnection = async () => {
       await schemaConn.end();
     }
 
+    // ── Step 2b: Load triggers.sql ──────────────────────────────────────────
+    // Triggers use DELIMITER which mysql2 doesn't support in multipleStatements.
+    // We parse each trigger block individually and execute them one by one.
+    const triggersPath = path.join(__dirname, '../database/triggers.sql');
+    if (fs.existsSync(triggersPath)) {
+      const triggerConn = await mysql.createConnection({
+        host:               process.env.DB_HOST,
+        user:               process.env.DB_USER,
+        password:           process.env.DB_PASSWORD,
+        database:           process.env.DB_NAME,
+        port:               Number(process.env.DB_PORT) || 3306,
+        multipleStatements: true,
+        ...sslConfig,
+      });
+
+      const triggerSql = fs.readFileSync(triggersPath, 'utf8');
+
+      // Extract DROP TRIGGER and CREATE TRIGGER statements
+      // Strategy: split on DELIMITER, extract the SQL blocks
+      const blocks = triggerSql.split(/DELIMITER\s+\$\$|DELIMITER\s+;/);
+      for (const block of blocks) {
+        const trimmed = block.trim();
+        if (!trimmed) continue;
+
+        // Handle DROP TRIGGER statements (plain SQL outside DELIMITER blocks)
+        const dropMatches = trimmed.match(/DROP\s+TRIGGER\s+IF\s+EXISTS\s+\w+\s*;/gi);
+        if (dropMatches) {
+          for (const drop of dropMatches) {
+            try { await triggerConn.query(drop); } catch (e) { /* ignore */ }
+          }
+        }
+
+        // Handle CREATE TRIGGER blocks (inside DELIMITER $$ ... $$)
+        const createMatch = trimmed.match(/CREATE\s+TRIGGER[\s\S]+?END\$\$/i);
+        if (createMatch) {
+          const createSql = createMatch[0].replace(/\$\$$/, ''); // remove trailing $$
+          try {
+            await triggerConn.query(createSql);
+          } catch (e) {
+            // 1359 = Trigger already exists — safe to ignore on re-runs
+            if (e.errno !== 1359) {
+              console.warn(`⚠️  Trigger warning: ${e.message}`);
+            }
+          }
+        }
+      }
+
+      await triggerConn.end();
+      console.log('✅ Database Triggers loaded from triggers.sql');
+    }
+
     // ── Step 3: Verify the main pool works ──────────────────────────────────
     const connection = await pool.getConnection();
     console.log('✅ MySQL connected successfully and Database is ready!');

@@ -13,13 +13,16 @@ const followUser = async (req, res, next) => {
     const { username } = req.params;
     const followerId = req.user.id;
 
-    // Resolve target username → user_id
+    await connection.beginTransaction();
+
+    // Resolve target username → user_id — FOR UPDATE locks the user row
     const [targetRows] = await connection.execute(
-      'SELECT id FROM users WHERE username = ? AND is_active = 1',
+      'SELECT id FROM users WHERE username = ? AND is_active = 1 FOR UPDATE',
       [username]
     );
 
     if (targetRows.length === 0) {
+      await connection.rollback();
       connection.release();
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
@@ -27,22 +30,22 @@ const followUser = async (req, res, next) => {
     const followingId = targetRows[0].id;
 
     if (followerId === followingId) {
+      await connection.rollback();
       connection.release();
       return res.status(400).json({ success: false, message: 'You cannot follow yourself.' });
     }
 
-    // Check if already following
+    // Check if already following — FOR UPDATE prevents duplicate-follow race condition
     const [existing] = await connection.execute(
-      'SELECT id FROM follows WHERE follower_id = ? AND following_id = ?',
+      'SELECT id FROM follows WHERE follower_id = ? AND following_id = ? FOR UPDATE',
       [followerId, followingId]
     );
 
     if (existing.length > 0) {
+      await connection.rollback();
       connection.release();
       return res.status(409).json({ success: false, message: 'Already following this user.' });
     }
-
-    await connection.beginTransaction();
 
     await connection.execute(
       'INSERT INTO follows (follower_id, following_id) VALUES (?, ?)',

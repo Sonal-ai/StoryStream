@@ -150,6 +150,8 @@ const getAllPosts = async (req, res, next) => {
   try {
     const { limit, offset, page } = getPagination(req.query);
 
+    const userId = req.user?.id || 0; // 0 = no user, liked_by_me will always be false
+
     // pool.query() used here (not execute) because mysql2 prepared statements
     // reject numeric LIMIT/OFFSET params with ER_WRONG_ARGUMENTS
     const [posts] = await pool.query(
@@ -157,13 +159,14 @@ const getAllPosts = async (req, res, next) => {
          p.id, p.content, p.image_url, p.created_at,
          u.id AS author_id, u.username, u.profile_picture,
          (SELECT COUNT(*) FROM likes    WHERE post_id = p.id)                         AS like_count,
-         (SELECT COUNT(*) FROM comments WHERE post_id = p.id AND deleted_at IS NULL)  AS comment_count
+         (SELECT COUNT(*) FROM comments WHERE post_id = p.id AND deleted_at IS NULL)  AS comment_count,
+         EXISTS (SELECT 1 FROM likes WHERE user_id = ? AND post_id = p.id)            AS liked_by_me
        FROM posts p
        JOIN users u ON u.id = p.user_id
        WHERE p.deleted_at IS NULL
        ORDER BY p.created_at DESC
        LIMIT ? OFFSET ?`,
-      [limit, offset]
+      [userId, limit, offset]
     );
 
     const [[{ total }]] = await pool.execute(
@@ -260,17 +263,19 @@ const getFeed = async (req, res, next) => {
 const getPostById = async (req, res, next) => {
   try {
     const postId = parseInt(req.params.id);
+    const userId = req.user?.id || 0;
 
     const [rows] = await pool.execute(
       `SELECT 
          p.id, p.content, p.image_url, p.created_at,
          u.id AS author_id, u.username, u.profile_picture,
          (SELECT COUNT(*) FROM likes    WHERE post_id = p.id)                        AS like_count,
-         (SELECT COUNT(*) FROM comments WHERE post_id = p.id AND deleted_at IS NULL) AS comment_count
+         (SELECT COUNT(*) FROM comments WHERE post_id = p.id AND deleted_at IS NULL) AS comment_count,
+         EXISTS (SELECT 1 FROM likes WHERE user_id = ? AND post_id = p.id)           AS liked_by_me
        FROM posts p
        JOIN users u ON u.id = p.user_id
        WHERE p.id = ? AND p.deleted_at IS NULL`,
-      [postId]
+      [userId, postId]
     );
 
     if (rows.length === 0) {
@@ -302,13 +307,15 @@ const getPostsByHashtag = async (req, res, next) => {
   try {
     const tag = req.params.tag.toLowerCase();
     const { limit, offset, page } = getPagination(req.query);
+    const userId = req.user?.id || 0;
 
     const [posts] = await pool.query(
       `SELECT 
          p.id, p.content, p.image_url, p.created_at,
          u.id AS author_id, u.username, u.profile_picture,
          (SELECT COUNT(*) FROM likes    WHERE post_id = p.id)                        AS like_count,
-         (SELECT COUNT(*) FROM comments WHERE post_id = p.id AND deleted_at IS NULL) AS comment_count
+         (SELECT COUNT(*) FROM comments WHERE post_id = p.id AND deleted_at IS NULL) AS comment_count,
+         EXISTS (SELECT 1 FROM likes WHERE user_id = ? AND post_id = p.id)           AS liked_by_me
        FROM posts p
        JOIN users        u  ON u.id  = p.user_id
        JOIN post_hashtags ph ON ph.post_id = p.id
@@ -316,7 +323,7 @@ const getPostsByHashtag = async (req, res, next) => {
        WHERE h.name = ? AND p.deleted_at IS NULL
        ORDER BY p.created_at DESC
        LIMIT ? OFFSET ?`,
-      [tag, limit, offset]
+      [userId, tag, limit, offset]
     );
 
     const [[{ total }]] = await pool.execute(

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -17,11 +17,14 @@ import HashtagPage from './pages/HashtagPage';
 
 const AppRoutes = () => {
   const { user } = useAuth();
+  const location = useLocation();
+
+  const hideNavbarRoutes = ['/', '/login', '/register'];
+  const showNavbar = !hideNavbarRoutes.includes(location.pathname);
 
   return (
     <>
-      {/* Navbar only for authenticated, non-landing pages */}
-      {user && <Navbar />}
+      {showNavbar && <Navbar />}
       <Routes>
         {/* Public landing page — always accessible */}
         <Route path="/"        element={<LandingPage />} />
@@ -30,15 +33,17 @@ const AppRoutes = () => {
         <Route path="/login"    element={!user ? <LoginPage />    : <Navigate to="/feed" />} />
         <Route path="/register" element={!user ? <RegisterPage /> : <Navigate to="/feed" />} />
 
+        {/* Public app routes */}
+        <Route path="/feed"                              element={<HomePage />} />
+        <Route path="/post/:id"                          element={<PostDetailPage />} />
+        <Route path="/profile/:username"                 element={<ProfilePage />} />
+
         {/* Protected app routes */}
-        <Route path="/feed"                              element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-        <Route path="/profile/:username"                 element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/notifications"                     element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-        <Route path="/post/:id"                          element={<ProtectedRoute><PostDetailPage /></ProtectedRoute>} />
         <Route path="/search"                            element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
         <Route path="/profile/:username/followers"       element={<ProtectedRoute><FollowersPage /></ProtectedRoute>} />
         <Route path="/profile/:username/following"       element={<ProtectedRoute><FollowingPage /></ProtectedRoute>} />
-        <Route path="/hashtag/:tag"                      element={<ProtectedRoute><HashtagPage /></ProtectedRoute>} />
+        <Route path="/hashtag/:tag"                      element={<HashtagPage />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

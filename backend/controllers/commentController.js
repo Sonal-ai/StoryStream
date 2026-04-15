@@ -23,18 +23,19 @@ const addComment = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Comment cannot exceed 500 characters.' });
     }
 
-    // Verify the post exists and is not deleted
+    await connection.beginTransaction();
+
+    // Verify the post exists — FOR UPDATE locks the row to prevent concurrent deletion
     const [postRows] = await connection.execute(
-      'SELECT id, user_id FROM posts WHERE id = ? AND deleted_at IS NULL',
+      'SELECT id, user_id FROM posts WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
       [postId]
     );
 
     if (postRows.length === 0) {
+      await connection.rollback();
       connection.release();
       return res.status(404).json({ success: false, message: 'Post not found.' });
     }
-
-    await connection.beginTransaction();
 
     // Insert comment
     const [result] = await connection.execute(
