@@ -1647,12 +1647,149 @@ body, .navbar, .post-card, .profile-card, .auth-card,
 
 /* REPORT / PDF */
 .lp-report-wrapper { width:100%; }
-.lp-pdf-frame-wrapper { position:relative; width:100%; height:600px; background:#13131f; border:1px solid #252538; border-radius:20px; overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,.5); }
-.lp-pdf-frame { width:100%; height:100%; border:none; }
-.lp-pdf-placeholder { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:#5e5e80; background:radial-gradient(ellipse at center,#17172b,#0a0a18); text-align:center; padding:32px; }
+
+/* Toolbar above PDF */
+.lp-report-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #13131f;
+  border: 1px solid #252538;
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
+}
+.lp-report-toolbar-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9998b0;
+}
+.lp-report-toolbar-label svg {
+  color: #9b91e3;
+}
+.lp-report-toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+.lp-report-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #252538;
+  background: rgba(255,255,255,0.04);
+  color: #9998b0;
+  text-decoration: none;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+.lp-report-toolbar-btn:hover {
+  color: #e8e8f0;
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(124,111,205,0.4);
+  transform: translateY(-1px);
+}
+.lp-report-toolbar-btn-primary {
+  background: linear-gradient(135deg,#7c6fcd,#9b91e3);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 12px rgba(124,111,205,0.3);
+}
+.lp-report-toolbar-btn-primary:hover {
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(124,111,205,0.5);
+}
+
+/* PDF Frame */
+.lp-pdf-frame-wrapper {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  min-height: 500px;
+  max-height: 900px;
+  background: #13131f;
+  border: 1px solid #252538;
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,.5);
+}
+.lp-pdf-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  background: #fff;
+}
+
+/* Placeholder overlay — fades out when PDF loads */
+.lp-pdf-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #5e5e80;
+  background: radial-gradient(ellipse at center,#17172b,#0a0a18);
+  text-align: center;
+  padding: 32px;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  z-index: 2;
+}
+.lp-pdf-placeholder-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
 .lp-pdf-placeholder svg { color:#9b91e3; opacity:.6; }
 .lp-pdf-placeholder p { font-size:18px; font-weight:600; color:#9998b0; }
 .lp-pdf-placeholder code { background:rgba(124,111,205,.15); color:#9b91e3; padding:2px 7px; border-radius:5px; }
+
+/* Loading ring animation */
+.lp-pdf-loading-ring {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lp-pdf-loading-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #9b91e3;
+  border-right-color: #67c6e3;
+  animation: lp-pdf-spin 1.2s linear infinite;
+}
+@keyframes lp-pdf-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Scroll hint below the frame */
+.lp-report-scroll-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #5e5e80;
+  animation: lp-bounce 2s ease-in-out infinite;
+}
 
 /* STATS */
 .lp-stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:2px; background:#252538; border:1px solid #252538; border-radius:20px; overflow:hidden; }
@@ -1873,6 +2010,41 @@ body, .navbar, .post-card, .profile-card, .auth-card,
 [data-theme="light"] .lp-pdf-placeholder svg {
   color: #6b5fb8;
 }
+/* Report toolbar light mode */
+[data-theme="light"] .lp-report-toolbar {
+  background: #f5f0e8;
+  border-color: #cdc8c0;
+}
+[data-theme="light"] .lp-report-toolbar-label {
+  color: #4a4640;
+}
+[data-theme="light"] .lp-report-toolbar-label svg {
+  color: #6b5fb8;
+}
+[data-theme="light"] .lp-report-toolbar-btn {
+  border-color: #cdc8c0;
+  background: rgba(0,0,0,0.03);
+  color: #4a4640;
+}
+[data-theme="light"] .lp-report-toolbar-btn:hover {
+  color: #1c1a17;
+  background: rgba(0,0,0,0.06);
+  border-color: rgba(124,111,205,0.35);
+}
+[data-theme="light"] .lp-report-toolbar-btn-primary {
+  color: #fff;
+  border-color: transparent;
+}
+[data-theme="light"] .lp-report-toolbar-btn-primary:hover {
+  color: #fff;
+}
+[data-theme="light"] .lp-report-scroll-hint {
+  color: #7a756e;
+}
+[data-theme="light"] .lp-pdf-loading-ring::before {
+  border-top-color: #6b5fb8;
+  border-right-color: #5bafd6;
+}
 
 /* ── Team Cards ───────────────────────────────────────────── */
 [data-theme="light"] .lp-team-card {
@@ -1950,7 +2122,9 @@ body, .navbar, .post-card, .profile-card, .auth-card,
 .lp-root, .lp-nav, .lp-feature-card, .lp-team-card,
 .lp-mockup-window, .lp-mockup-bar, .lp-fake-post,
 .lp-stat-item, .lp-footer, .lp-video-container,
-.lp-pdf-frame-wrapper, .lp-section-dark {
+.lp-pdf-frame-wrapper, .lp-section-dark,
+.lp-report-toolbar, .lp-report-toolbar-btn,
+.lp-report-scroll-hint {
   transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
               border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
               color 0.4s cubic-bezier(0.4, 0, 0.2, 1),

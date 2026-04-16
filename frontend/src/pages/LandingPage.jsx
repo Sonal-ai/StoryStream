@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
 import {
 Sparkles, Zap, Shield, Hash, Bell, Users, Database,
-Heart, MessageCircle, ArrowRight, FileText, ChevronDown, Star, GitBranch
+Heart, MessageCircle, ArrowRight, FileText, ChevronDown, Star, GitBranch, Download, ExternalLink
 } from 'lucide-react';
 
 /* ─── Brand SVG icons (not in lucide-react) ───────────── */
@@ -61,6 +61,8 @@ const TECH_STACK = [
 const LandingPage = () => {
 const { user } = useAuth();
 const navigate = useNavigate();
+const [pdfLoaded, setPdfLoaded] = useState(false);
+const [pdfError, setPdfError] = useState(false);
 
 const handleGetStarted = () => navigate(user ? '/feed' : '/register');
 
@@ -194,21 +196,61 @@ return () => io.disconnect();
           <p className="lp-section-sub lp-reveal">Full technical report covering architecture, database design, API documentation and references.</p>
 
           <div className="lp-report-wrapper lp-reveal">
-            {/* Replace the src with your actual PDF URL */}
+            {/* Toolbar */}
+            <div className="lp-report-toolbar">
+              <div className="lp-report-toolbar-label">
+                <FileText size={16} />
+                <span>StoryStream — Project Report</span>
+              </div>
+              <div className="lp-report-toolbar-actions">
+                <a
+                  href="/report.pdf"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="lp-report-toolbar-btn"
+                  title="Open in new tab"
+                >
+                  <ExternalLink size={14} /> Open
+                </a>
+                <a
+                  href="/report.pdf"
+                  download
+                  className="lp-report-toolbar-btn lp-report-toolbar-btn-primary"
+                  title="Download PDF"
+                >
+                  <Download size={14} /> Download
+                </a>
+              </div>
+            </div>
+
+            {/* PDF Frame */}
             <div className="lp-pdf-frame-wrapper">
               <iframe
                 className="lp-pdf-frame"
-                src="/report.pdf"
+                src="/report.pdf#toolbar=1&navpanes=1&scrollbar=1&view=FitH"
                 title="StoryStream Project Report"
+                onLoad={() => setPdfLoaded(true)}
+                onError={() => setPdfError(true)}
               />
-              <div className="lp-pdf-placeholder">
-                <FileText size={48} />
-                <p>Project Report Preview</p>
-                <span>Place your PDF at <code>public/report.pdf</code> to enable the viewer</span>
-                <a href="/report.pdf" download className="lp-btn-primary" style={{ marginTop: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                  <FileText size={15} /> Download Report
-                </a>
-              </div>
+              {/* Fallback placeholder — shown until PDF loads or on error */}
+              {(!pdfLoaded || pdfError) && (
+                <div className={`lp-pdf-placeholder ${pdfLoaded && !pdfError ? 'lp-pdf-placeholder-hidden' : ''}`}>
+                  <div className="lp-pdf-loading-ring">
+                    <FileText size={48} />
+                  </div>
+                  <p>{pdfError ? 'Could not load PDF preview' : 'Loading report preview…'}</p>
+                  <span>Scroll inside the frame to read the full report</span>
+                  <a href="/report.pdf" download className="lp-btn-primary" style={{ marginTop: '20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <Download size={15} /> Download Report
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Scroll hint */}
+            <div className="lp-report-scroll-hint">
+              <ChevronDown size={14} />
+              <span>Scroll within the frame to read the full report</span>
             </div>
           </div>
         </div>
